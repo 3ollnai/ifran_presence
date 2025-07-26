@@ -52,7 +52,9 @@ Route::prefix('coordinateur')->name('coordinateur.')->middleware(['auth', 'role:
     Route::get('seances/{seance}/edit', [CoordinateurController::class, 'editSeance'])->name('seances.edit');
     Route::put('seances/{seance}', [CoordinateurController::class, 'updateSeance'])->name('seances.update');
     Route::delete('seances/{seance}', [CoordinateurController::class, 'destroySeance'])->name('seances.destroy');
-    
+
+
+
 
     Route::get('seances/{seance}/presence', [CoordinateurController::class, 'presence'])->name('seances.presence');
     Route::post('seances/{seance}/presence', [CoordinateurController::class, 'storePresence'])->name('seances.storePresence');

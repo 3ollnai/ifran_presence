@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+
 use Illuminate\Database\Eloquent\Model;
+use App\Models\User;
 
 class Professeur extends Model
 {
@@ -12,6 +14,7 @@ class Professeur extends Model
     {
         return $this->belongsTo(User::class);
     }
+
 
     public function modules()
     {

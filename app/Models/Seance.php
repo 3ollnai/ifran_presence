@@ -1,23 +1,35 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
 class Seance extends Model
 {
-    protected $fillable = [
-        'module_id', 'type_cours_id', 'enseignant_id', 'date', 'heure_debut', 'heure_fin', 'salle', 'classe_id'
-    ];
+   protected $fillable = [
+    'classe_id',
+    'module_id',
+    'professeur_id',
+    'date',
+    'heure_debut',
+    'heure_fin',
+    'type_cours_id',
+];
+
+
 
     public function module()
     {
         return $this->belongsTo(Module::class);
     }
 
+    // app/Models/Seance.php
+
     public function typeCours()
     {
-        return $this->belongsTo(TypeCours::class, 'type_cours_id');
+        return $this->belongsTo(\App\Models\TypeCours::class, 'type_cours_id');
     }
+
 
     public function professeur() // Assurez-vous que cette méthode est présente
     {
@@ -39,4 +51,3 @@ class Seance extends Model
         return $this->hasMany(SeanceReportee::class);
     }
 }
-
