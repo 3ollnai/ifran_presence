@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'Gestion de Présences - Coordinateur')</title>
+    <title>@yield('title', 'Tableau de Bord Professeur')</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.css" rel="stylesheet" />
@@ -25,14 +25,14 @@
                         <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"
                             fill="none" />
                     </svg>
-                    <span class="text-lg font-bold text-violet-700">Gestion de Présences - Coordinateur</span>
+                    <span class="text-lg font-bold text-violet-700">Tableau de Bord Professeur</span>
                 </div>
                 <nav class="mt-8">
                     <ul>
                         <li>
-                            <a href="{{ route('coordinateur.index') }}"
+                            <a href="{{ route('professeur.index') }}"
                                 class="flex items-center px-6 py-3 font-semibold rounded-r-full mb-2
-                                {{ request()->routeIs('coordinateur.index') ? 'text-violet-700 bg-violet-100' : 'text-gray-700 hover:bg-violet-50' }}">
+                                {{ request()->routeIs('professeur.index') ? 'text-violet-700 bg-violet-100' : 'text-gray-700 hover:bg-violet-50' }}">
                                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" stroke-width="2"
                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -43,43 +43,32 @@
                             </a>
                         </li>
                         <li>
-                            <a href="{{ route('coordinateur.seances') }}"
+                            <a href="{{ route('presences.create') }}"
                                 class="flex items-center px-6 py-3 font-semibold rounded-r-full mb-2
-                                {{ request()->routeIs('coordinateur.seances') ? 'text-violet-700 bg-violet-100' : 'text-gray-700 hover:bg-violet-50' }}">
+       {{ request()->routeIs('presences.create') ? 'text-violet-700 bg-violet-100' : 'text-gray-700 hover:bg-violet-50' }}">
                                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" stroke-width="2"
                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round"
                                         d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
                                     </path>
                                 </svg>
-                                Séances
-                            </a>
-                        </li>
-                        <li>
-                            <a href="{{ route('coordinateur.emploi') }}"
-                                class="flex items-center px-6 py-3 font-semibold rounded-r-full mb-2
-        {{ request()->routeIs('coordinateur.emploi') ? 'text-violet-700 bg-violet-100' : 'text-gray-700 hover:bg-violet-50' }}">
-                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" stroke-width="2"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h18v18H3V3z"></path>
-                                </svg>
-                                Emploi du Temps
-                            </a>
-                        </li>
-                        <li>
-                            <a href=""
-                                class="flex items-center px-6 py-3 font-semibold rounded-r-full mb-2
-                                 'text-violet-700 bg-violet-100' : 'text-gray-700 hover:bg-violet-50' }}">
-                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" stroke-width="2"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
-                                    </path>
-                                </svg>
-                                Présence
+                                Présences
                             </a>
                         </li>
 
+                        <li>
+                            <a href="{{ route('historique.presence') }}"
+                                class="flex items-center px-6 py-3 font-semibold rounded-r-full mb-2
+        {{ request()->routeIs('historique.presence') ? 'text-violet-700 bg-violet-100' : 'text-gray-700 hover:bg-violet-50' }}">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" stroke-width="2"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                                    </path>
+                                </svg>
+                                Historique des Présences
+                            </a>
+                        </li>
                     </ul>
                 </nav>
             </div>
@@ -90,7 +79,7 @@
                     <span class="font-medium">
                         {{ auth()->user()->nom }} {{ auth()->user()->prenom }}
                         <span
-                            class="ml-2 px-2 py-0.5 text-xs rounded bg-violet-200 text-violet-800 font-semibold">Coordinateur</span>
+                            class="ml-2 px-2 py-0.5 text-xs rounded bg-violet-200 text-violet-800 font-semibold">Professeur</span>
                     </span>
                     <a href="{{ route('logout') }}" class="ml-auto text-violet-700 hover:text-violet-800 transition"
                         onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
@@ -126,7 +115,7 @@
                         </svg>
                         <span class="absolute top-0 right-0 inline-block w-2 h-2 bg-red-500 rounded-full"></span>
                     </button>
-                    <img src="https://i.pravatar.cc/32?img=1" alt="Coordinateur"
+                    <img src="https://i.pravatar.cc/32?img=1" alt="Professeur"
                         class="w-8 h-8 rounded-full border-2 border-violet-300">
                 </div>
             </header>

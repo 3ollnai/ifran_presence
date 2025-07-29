@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="container mx-auto py-8 px-2 sm:px-4">
-        {{-- Messages de confirmation et d’erreur --}}
+        {{-- Messages de confirmation et d'erreur --}}
         @if (session('success'))
             <div class="mb-4 px-4 py-3 rounded bg-green-100 text-green-800 font-semibold shadow">
                 {{ session('success') }}
@@ -26,7 +26,7 @@
         @endif
 
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-2">
-            <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-800">Liste des Séances</h1>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-800">Gestion de l'Emploi du Temps</h1>
             <a href="{{ route('coordinateur.seances.create') }}"
                 class="inline-flex items-center px-4 py-2 bg-violet-600 text-white rounded-lg shadow hover:bg-violet-700 transition font-semibold text-sm sm:text-base">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">

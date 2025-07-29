@@ -6,10 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class StatutPresence extends Model
 {
-    protected $table = 'statut_presence';
-
+    protected $table = 'statut_presences'; // Assurez-vous que le nom de la table est correct
     protected $fillable = ['presence_id', 'statut'];
-
     public function presence()
     {
         return $this->belongsTo(Presence::class);

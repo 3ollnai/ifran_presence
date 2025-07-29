@@ -9,7 +9,7 @@ use App\Models\Etudiant;
 use App\Models\Professeur;
 use App\Models\Presence;
 use App\Models\Module;
-use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 
 class CoordinateurController extends Controller
@@ -25,7 +25,7 @@ class CoordinateurController extends Controller
      */
     public function index()
     {
-        $classes = Classe::all(); // Adapter si besoin selon le coordinateur
+        $classes = Classe::all();
 
         // Comptez le nombre d'étudiants et d'enseignants
         $etudiants_count = Etudiant::count();
@@ -45,13 +45,13 @@ class CoordinateurController extends Controller
 
         if ($module_id) {
             $module = Module::findOrFail($module_id);
-            $seances = Seance::with(['module', 'typeCours', 'professeur', 'classe'])
+            $seances = Seance::with(['module', 'typeCours', 'professeur.user', 'classe'])
                 ->where('module_id', $module_id)
                 ->orderBy('date')
                 ->paginate(10);
         } else {
             $module = null;
-            $seances = Seance::with(['module', 'typeCours', 'professeur', 'classe'])
+            $seances = Seance::with(['module', 'typeCours', 'professeur.user', 'classe'])
                 ->orderBy('created_at', 'desc')
                 ->paginate(10);
         }
@@ -59,23 +59,18 @@ class CoordinateurController extends Controller
         return view('coordinateur.seances', compact('module', 'seances'));
     }
 
-
-
     /**
      * Affichage du formulaire de création d'une séance
      */
- public function createSeance()
-{
-    $professeurs = \App\Models\Professeur::with('user')->get();
-    $classes     = \App\Models\Classe::all();
-    $modules     = \App\Models\Module::all();
-    $typesCours  = \App\Models\TypeCours::all();
+    public function createSeance()
+    {
+        $professeurs = Professeur::with('user:id,nom,prenom')->get();
+        $classes = Classe::all();
+        $modules = Module::all();
+        $typesCours = \App\Models\TypeCours::all();
 
-    return view('coordinateur.create-seance', compact('professeurs', 'classes', 'modules', 'typesCours'));
-}
-
-
-
+        return view('coordinateur.create-seance', compact('professeurs', 'classes', 'modules', 'typesCours'));
+    }
 
     /**
      * Enregistrement d'une nouvelle séance
@@ -83,28 +78,18 @@ class CoordinateurController extends Controller
     public function storeSeance(Request $request)
     {
         $request->validate([
-            'classe_id'      => 'required|exists:classes,id',
-            'module_id'      => 'required|exists:modules,id',
-            'professeur_id'  => 'required|exists:users,id',
-            'date'           => 'required|date',
-            'heure_debut'    => 'required',
-            'heure_fin'      => 'required',
-            'type_cours_id'  => 'required|exists:type_cours,id',
+            'classe_id' => 'required|exists:classes,id',
+            'module_id' => 'required|exists:modules,id',
+            'professeur_id' => 'required|exists:professeurs,id',
+            'date' => 'required|date',
+            'heure_debut' => 'required',
+            'heure_fin' => 'required',
+            'type_cours_id' => 'required|exists:type_cours,id',
         ]);
 
+        Seance::create($request->all());
 
-        Seance::create([
-            'classe_id'      => $request->classe_id,
-            'module_id'      => $request->module_id,
-            'professeur_id'  => $request->professeur_id,
-            'date'           => $request->date,
-            'heure_debut'    => $request->heure_debut,
-            'heure_fin'      => $request->heure_fin,
-            'type_cours_id'  => $request->type_cours_id,
-        ]);
-
-        return redirect()->route('coordinateur.seances')
-            ->with('success', 'Séance ajoutée avec succès.');
+        return redirect()->route('coordinateur.seances')->with('success', 'Séance ajoutée avec succès.');
     }
 
     /**
@@ -112,10 +97,13 @@ class CoordinateurController extends Controller
      */
     public function editSeance($seance_id)
     {
-        $seance = Seance::with(['classe', 'professeur'])->findOrFail($seance_id);
-        $enseignants = User::role('professeur')->get();
+        $seance = Seance::with(['classe', 'professeur.user:id,nom,prenom'])->findOrFail($seance_id);
+        $professeurs = Professeur::with('user')->get();
         $classes = Classe::all();
-        return view('coordinateur.edit-seance', compact('seance', 'enseignants', 'classes'));
+        $modules = Module::all();
+        $typesCours = \App\Models\TypeCours::all();
+
+        return view('coordinateur.edit-seance', compact('seance', 'professeurs', 'classes', 'modules', 'typesCours'));
     }
 
     public function updateSeance(Request $request, $seance_id)
@@ -123,37 +111,71 @@ class CoordinateurController extends Controller
         $seance = Seance::findOrFail($seance_id);
 
         $request->validate([
-            'classe_id'     => 'required|exists:classes,id',
-            'new_date' => 'required|date',
-            'module'        => 'required|string|max:255',
-            'professeur_id' => 'required|exists:users,id',
-            'date'          => 'required|date',
-            'heure_debut'   => 'required',
-            'heure_fin'     => 'required',
-            'type'          => 'required|in:presentiel,e-learning,workshop',
+            'classe_id' => 'required|exists:classes,id',
+            'date' => 'required|date',
+            'module_id' => 'required|exists:modules,id',
+            'professeur_id' => 'required|exists:professeurs,id',
+            'heure_debut' => 'required',
+            'heure_fin' => 'required',
+            'type_cours_id' => 'required|exists:type_cours,id',
         ]);
 
         $seance->update($request->all());
 
-        return back()->with('success', 'Séance modifiée avec succès.');
-        return redirect()->route('coordinateur.seances')->with('success', 'Séance reportée avec succès.');
+        return redirect()->route('coordinateur.seances')->with('success', 'Séance modifiée avec succès.');
     }
 
     public function destroySeance($id)
     {
-        $seance = \App\Models\Seance::findOrFail($id);
+        $seance = Seance::findOrFail($id);
         $seance->delete();
 
         return redirect()->route('coordinateur.seances')->with('success', 'Séance supprimée avec succès.');
     }
 
+    public function emploi(Request $request)
+    {
+        $query = Seance::with(['classe', 'typeCours', 'professeur.user', 'module']);
+
+        // Filtrer par module
+        $selectedModule = $request->input('module', '');
+        if ($selectedModule) {
+            $query->whereHas('module', function ($q) use ($selectedModule) {
+                $q->where('nom', $selectedModule);
+            });
+        }
+
+        // Filtrer par classe
+        $selectedClasse = $request->input('classe', '');
+        if ($selectedClasse) {
+            $query->whereHas('classe', function ($q) use ($selectedClasse) {
+                $q->where('nom', $selectedClasse);
+            });
+        }
+
+        // Filtrer par date
+        $jourDebut = $request->input('jour_debut');
+        $jourFin = $request->input('jour_fin');
+        if ($jourDebut && $jourFin) {
+            $query->whereBetween('date', [date('Y-m-d', strtotime($jourDebut)), date('Y-m-d', strtotime($jourFin))]);
+        }
+
+        $seances = $query->orderBy('date', 'desc')->paginate(12);
+        $groupedSeances = $seances->groupBy(function ($seance) {
+            return $seance->classe ? $seance->classe->nom : 'Non assigné';
+        });
+
+        $allClasses = $groupedSeances->keys()->toArray();
+
+        return view('coordinateur.emploi', compact('groupedSeances', 'allClasses', 'selectedClasse', 'jourDebut', 'jourFin', 'seances'));
+    }
 
     /**
      * Saisie des présences pour une séance (par le coordinateur)
      */
     public function presence($seance_id)
     {
-        $seance = Seance::with(['classe', 'professeur'])->findOrFail($seance_id);
+        $seance = Seance::with(['classe', 'professeur.user'])->findOrFail($seance_id);
         $etudiants = Etudiant::where('classe_id', $seance->classe_id)->get();
         $presences = Presence::where('seance_id', $seance_id)->get()->keyBy('etudiant_id');
 
@@ -166,7 +188,7 @@ class CoordinateurController extends Controller
         $etudiants = Etudiant::where('classe_id', $seance->classe_id)->get();
 
         foreach ($etudiants as $etudiant) {
-            $statut = $request->input('presence.' . $etudiant->id); // 'present', 'retard', 'absent'
+            $statut = $request->input('presence.' . $etudiant->id);
             Presence::updateOrCreate(
                 ['seance_id' => $seance_id, 'etudiant_id' => $etudiant->id],
                 ['statut' => $statut]
@@ -174,6 +196,23 @@ class CoordinateurController extends Controller
         }
 
         return back()->with('success', 'Présences enregistrées.');
+    }
+
+    /**
+     * Affichage des absences à justifier
+     */
+    public function absences()
+    {
+        $demandes_en_attente = Presence::where('justifie', false)->count();
+        $demandes_approuvees = Presence::where('justifie', true)->count();
+        $total_demandes = Presence::count();
+
+        $demandes = Presence::with(['etudiant', 'etudiant.classe'])
+            ->where('justifie', false)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('coordinateur.absences', compact('demandes_en_attente', 'demandes_approuvees', 'total_demandes', 'demandes'));
     }
 
     /**

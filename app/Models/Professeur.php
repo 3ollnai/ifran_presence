@@ -21,8 +21,8 @@ class Professeur extends Model
         return $this->hasMany(Module::class, 'professeur_id');
     }
 
-    public function seances()
+   public function seances()
     {
-        return $this->hasMany(Seance::class, 'enseignant_id');
+        return $this->hasMany(Seance::class, 'professeur_id');
     }
 }

@@ -18,8 +18,9 @@ class CreateStatutPresencesTable extends Migration
         });
     }
 
-    public function down()
-    {
-        Schema::dropIfExists('statut_presence');
-    }
+   public function down()
+{
+    Schema::dropIfExists('statut_presences'); // Correction ici
+}
+
 }

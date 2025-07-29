@@ -6,35 +6,32 @@ use Illuminate\Database\Eloquent\Model;
 
 class Seance extends Model
 {
-   protected $fillable = [
-    'classe_id',
-    'module_id',
-    'professeur_id',
-    'date',
-    'heure_debut',
-    'heure_fin',
-    'type_cours_id',
-];
-
-
+    protected $fillable = [
+        'classe_id',
+        'module_id',
+        'professeur_id',
+        'date',
+        'heure_debut',
+        'heure_fin',
+        'type_cours_id',
+        'annee_academique_id', // Ajout de la clé étrangère
+    ];
 
     public function module()
     {
         return $this->belongsTo(Module::class);
     }
 
-    // app/Models/Seance.php
-
     public function typeCours()
     {
         return $this->belongsTo(\App\Models\TypeCours::class, 'type_cours_id');
     }
 
-
-    public function professeur() // Assurez-vous que cette méthode est présente
-    {
-        return $this->belongsTo(User::class, 'enseignant_id'); // Assurez-vous que 'enseignant_id' est la clé étrangère correcte
-    }
+public function professeur()
+{
+    return $this->belongsTo(Professeur::class, 'professeur_id')
+        ->with('user:id,nom,prenom');
+}
 
     public function classe()
     {
@@ -49,5 +46,16 @@ class Seance extends Model
     public function seancesReportees()
     {
         return $this->hasMany(SeanceReportee::class);
+    }
+
+    // Nouvelle relation avec la table academic_years
+    public function anneeAcademique()
+    {
+        return $this->belongsTo(\App\Models\AcademicYear::class, 'annee_academique_id');
+    }
+
+    public function etudiants()
+    {
+        return $this->belongsToMany(Etudiant::class, 'seance_etudiant', 'seance_id', 'etudiant_id');
     }
 }

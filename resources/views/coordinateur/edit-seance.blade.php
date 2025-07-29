@@ -3,7 +3,7 @@
 @section('content')
     <div class="container mx-auto max-w-lg py-10">
         <div class="bg-white rounded-xl shadow-lg p-8">
-            <h1 class="text-2xl font-bold text-violet-700 mb-6">Créer une nouvelle séance</h1>
+            <h1 class="text-2xl font-bold text-violet-700 mb-6">Modifier la séance</h1>
 
             @if ($errors->any())
                 <div class="mb-4">
@@ -19,15 +19,16 @@
                 </div>
             @endif
 
-            <form action="{{ route('coordinateur.seances.store') }}" method="POST" class="space-y-6">
+            <form action="{{ route('coordinateur.seances.update', $seance->id) }}" method="POST" class="space-y-6">
                 @csrf
+                @method('PUT') <!-- Indique que c'est une mise à jour -->
 
                 <!-- Date -->
                 <div>
                     <label for="date" class="block text-sm font-semibold text-gray-700 mb-1">Date de la séance</label>
                     <input type="date" name="date" id="date"
                         class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-300"
-                        value="{{ old('date') }}" required>
+                        value="{{ old('date', $seance->date) }}" required>
                 </div>
 
                 <!-- Classe -->
@@ -38,7 +39,7 @@
                         required>
                         <option value="">Sélectionner une classe</option>
                         @foreach ($classes as $classe)
-                            <option value="{{ $classe->id }}" {{ old('classe_id') == $classe->id ? 'selected' : '' }}>
+                            <option value="{{ $classe->id }}" {{ $seance->classe_id == $classe->id ? 'selected' : '' }}>
                                 {{ $classe->nom }}
                             </option>
                         @endforeach
@@ -53,7 +54,7 @@
                         required>
                         <option value="">Sélectionner un module</option>
                         @foreach ($modules as $module)
-                            <option value="{{ $module->id }}" {{ old('module_id') == $module->id ? 'selected' : '' }}>
+                            <option value="{{ $module->id }}" {{ $seance->module_id == $module->id ? 'selected' : '' }}>
                                 {{ $module->nom }}
                             </option>
                         @endforeach
@@ -69,12 +70,15 @@
                         class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition"
                         required>
                         <option value="">Sélectionner un professeur</option>
-                        @foreach ($professeurs as $prof)
-                            <option value="{{ $prof->id }}" {{ old('professeur_id') == $prof->id ? 'selected' : '' }}>
-                                {{ $prof->user->prenom ?? '' }} {{ $prof->user->nom ?? '' }}
+                        @foreach ($professeurs as $professeur)
+                            <option value="{{ $professeur->id }}" {{ old('professeur_id', $seance->professeur_id) == $professeur->id ? 'selected' : '' }}>
+                                {{ $professeur->user->prenom }} {{ $professeur->user->nom }}
                             </option>
                         @endforeach
                     </select>
+                    @error('professeur_id')
+                        <div class="text-red-500 mt-2">{{ $message }}</div>
+                    @enderror
                 </div>
 
                 <!-- Heure début -->
@@ -82,7 +86,7 @@
                     <label for="heure_debut" class="block text-sm font-semibold text-gray-700 mb-1">Heure de début</label>
                     <input type="time" name="heure_debut" id="heure_debut"
                         class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-300"
-                        value="{{ old('heure_debut') }}" required>
+                        value="{{ old('heure_debut', $seance->heure_debut) }}" required>
                 </div>
 
                 <!-- Heure fin -->
@@ -90,7 +94,7 @@
                     <label for="heure_fin" class="block text-sm font-semibold text-gray-700 mb-1">Heure de fin</label>
                     <input type="time" name="heure_fin" id="heure_fin"
                         class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-300"
-                        value="{{ old('heure_fin') }}" required>
+                        value="{{ old('heure_fin', $seance->heure_fin) }}" required>
                 </div>
 
                 <!-- Type de séance -->
@@ -99,7 +103,7 @@
                     <select name="type_cours_id" id="type_cours_id" class="w-full border rounded px-3 py-2" required>
                         <option value="">Sélectionner un type</option>
                         @foreach ($typesCours as $type)
-                            <option value="{{ $type->id }}" {{ old('type_cours_id') == $type->id ? 'selected' : '' }}>
+                            <option value="{{ $type->id }}" {{ $seance->type_cours_id == $type->id ? 'selected' : '' }}>
                                 {{ $type->nom }}
                             </option>
                         @endforeach
