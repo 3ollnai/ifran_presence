@@ -98,7 +98,7 @@ class AdminController extends Controller
         return view('admin.edit-user', compact('user', 'roles', 'classes'));
     }
 
-    public function updateUser(Request $request, $id)
+public function updateUser(Request $request, $id)
 {
     $request->validate([
         'nom' => 'required|string|max:255',
@@ -106,7 +106,7 @@ class AdminController extends Controller
         'email' => 'required|string|email|max:255|unique:users,email,' . $id,
         'password' => 'nullable|string|min:6|confirmed',
         'categorie' => 'required|in:administrateur,professeur,coordinateur,etudiant,parent',
-        'classe_id' => 'nullable|exists:classes,id',
+        'etudiant_id' => 'nullable|exists:users,id',
     ]);
 
     $user = User::findOrFail($id);
@@ -119,11 +119,19 @@ class AdminController extends Controller
     }
 
     $user->categorie = $request->categorie;
-    $user->classe_id = $request->classe_id;
     $user->save();
+
+    // Mettre à jour l'étudiant associé à l'utilisateur
+    $etudiant = $user->etudiant;
+    if ($etudiant) {
+        $etudiant->user_id = $user->id;
+        $etudiant->save();
+    }
 
     return redirect()->route('admin.users')->with('success', 'Utilisateur mis à jour avec succès !');
 }
+
+
 
 
     // Affichage de la liste des classes et des filières

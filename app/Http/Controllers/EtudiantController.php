@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -17,42 +16,58 @@ class EtudiantController extends Controller
         $this->middleware(['auth', 'role:etudiant']);
     }
 
+    public function index()
+    {
+        $user = Auth::user();
 
-public function index()
-{
-    $user = Auth::user();
-
-    // Vérifier si l'utilisateur a un profil étudiant
-    if ($user->etudiant) {
+        // Vérifier si l'utilisateur a un profil étudiant
         $etudiant = $user->etudiant;
+        if ($etudiant) {
+            // Récupérer les informations personnelles de l'étudiant
+            $informationsPersonnelles = [
+                'nom' => $user->name,
+                'classe' => $etudiant->classe->name,
+                'numeroEtudiant' => $etudiant->numero,
+            ];
 
-        // Récupérer les 2 prochains cours de l'étudiant
-        $prochainsCours = Seance::where('classe_id', $etudiant->classe_id)
-                            ->whereDate('date', '>=', now())
-                            ->orderBy('date')
-                            ->take(2)
-                            ->get();
+            // Calculer le taux de présence
+            $presences = Presence::where('eleve_id', $etudiant->id)
+                                ->whereHas('seance', function ($query) {
+                                    $query->whereDate('date', '>=', now()->subMonths(3)); // Derniers 3 mois
+                                })
+                                ->get();
 
-        // Récupérer les informations personnelles de l'étudiant
-        $informationsPersonnelles = [
-            'nom' => $user->name,
-            'classe' => $etudiant->classe->name,
-            'numeroEtudiant' => $etudiant->numero,
-        ];
+            $totalSeances = $presences->count();
+            $totalAbsences = Seance::where('classe_id', $etudiant->classe_id)
+                                    ->whereDate('date', '>=', now()->subMonths(3))
+                                    ->count();
 
-        // Récupérer les notifications importantes
-        $notificationsImportantes = [
-            'Rappel : Examen de Mathématiques le 15 juin à 14h00.',
-            'Information : Sortie scolaire prévue le 20 mai, autorisation à remplir.',
-        ];
+            $tauxPresence = $totalSeances > 0 ? ($totalSeances / $totalAbsences) * 100 : 0;
 
-        return view('etudiant.index', compact('informationsPersonnelles', 'prochainsCours', 'notificationsImportantes'));
-    } else {
-        // Si l'utilisateur n'a pas de profil étudiant, redirigez-le vers une page appropriée
-        return redirect()->route('login')->with('error', 'Vous n\'avez pas de profil étudiant associé à votre compte.');
+            // Définir la couleur et le message en fonction du taux de présence
+            if ($tauxPresence >= 90) {
+                $tauxPresenceColor = 'text-green-500';
+                $tauxPresenceMessage = 'Excellent travail ce mois-ci !';
+            } elseif ($tauxPresence >= 80) {
+                $tauxPresenceColor = 'text-orange-500';
+                $tauxPresenceMessage = 'Bon travail, continuez ainsi !';
+            } else {
+                $tauxPresenceColor = 'text-red-500';
+                $tauxPresenceMessage = 'Votre taux de présence doit être amélioré.';
+            }
+
+            // Récupérer les notifications importantes
+            $notificationsImportantes = [
+                'Rappel : Examen de Mathématiques le 15 juin à 14h00.',
+                'Information : Sortie scolaire prévue le 20 mai, autorisation à remplir.',
+            ];
+
+            return view('etudiant.index', compact('informationsPersonnelles', 'notificationsImportantes', 'tauxPresence', 'tauxPresenceColor', 'tauxPresenceMessage'));
+        } else {
+            // Si l'utilisateur n'a pas de profil étudiant, redirigez-le vers une page appropriée
+            return redirect()->route('login')->with('error', 'Vous n\'avez pas de profil étudiant associé à votre compte.');
+        }
     }
-}
-
 
     /**
      * Afficher l'emploi du temps de l'étudiant

@@ -19,10 +19,11 @@ class User extends Authenticatable
     ];
 
 
- public function etudiants()
-    {
-        return $this->hasMany(Etudiant::class);
-    }
+public function etudiant()
+{
+    return $this->hasOne(Etudiant::class);
+}
+
 
     public function professeurs()
     {

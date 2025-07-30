@@ -79,19 +79,25 @@ class ProfesseurController extends Controller
         return redirect()->route('professeur.index')->with('success', 'Présences enregistrées avec succès.');
     }
 
-    public function showSeance($id)
-    {
-        $seance = Seance::with(['classe.etudiants.user', 'module', 'presences.statuts'])
-            ->findOrFail($id);
+public function showSeance($id)
+{
+    $seance = Seance::with([
+        'classe.etudiants.user',
+        'module',
+        'presences.statut' // Chargement de la relation 'statut' pour chaque présence
+    ])->findOrFail($id);
 
-        // Vérifier si la séance est associée à un professeur
-        $professeur = Professeur::where('user_id', Auth::id())->first();
-        if ($seance->professeur_id !== $professeur->id) {
-            return redirect()->route('professeur.index')->with('error', 'Accès non autorisé à cette séance.');
-        }
-
-        return view('professeur.showSeance', compact('seance'));
+    // Vérifier si la séance est associée à un professeur
+    $professeur = Professeur::where('user_id', Auth::id())->first();
+    if ($seance->professeur_id !== $professeur->id) {
+        return redirect()->route('professeur.index')->with('error', 'Accès non autorisé à cette séance.');
     }
+
+    return view('professeur.showSeance', compact('seance'));
+}
+
+
+
 
     public function historique()
     {

@@ -50,18 +50,23 @@
                   </ul>
               </nav>
           </div>
+          @if (auth()->check())
           <div class="p-6 flex items-center gap-3 border-t bg-violet-50">
-              <img src="https://i.pravatar.cc/40?img=1" alt="Étudiant" class="w-10 h-10 rounded-full border-2 border-violet-300">
+              <img src="https://i.pravatar.cc/40?img={{ auth()->user()->id }}" alt="{{ auth()->user()->nom }}" class="w-10 h-10 rounded-full border-2 border-violet-300">
               <span class="font-medium">
-                  John Doe
-                  <span class="ml-2 px-2 py-0.5 text-xs rounded bg-violet-200 text-violet-800 font-semibold">Étudiant</span>
+                  {{ auth()->user()->nom }} {{ auth()->user()->prenom }}
+                  <span class="ml-2 px-2 py-0.5 text-xs rounded bg-violet-200 text-violet-800 font-semibold">Professeur</span>
               </span>
-              <a href="#" class="ml-auto text-violet-700 hover:text-violet-800 transition">
+              <a href="{{ route('logout') }}" class="ml-auto text-violet-700 hover:text-violet-800 transition" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
                   </svg>
               </a>
+              <form id="logout-form" action="{{ route('logout') }}" method="POST" class="hidden">
+                  @csrf
+              </form>
           </div>
+          @endif
       </aside>
       <!-- Main Content -->
       <main class="flex-1 flex flex-col">

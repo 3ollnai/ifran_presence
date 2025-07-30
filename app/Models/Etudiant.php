@@ -29,10 +29,9 @@ class Etudiant extends Model
 
     // App\Models\Etudiant.php
 public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
-
+{
+    return $this->belongsTo(User::class);
+}
     public function classe()
     {
         return $this->belongsTo(Classe::class);

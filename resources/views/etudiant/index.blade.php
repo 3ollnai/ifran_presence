@@ -10,17 +10,41 @@
         <p>Classe : {{ $informationsPersonnelles['classe'] }}</p>
         <p>Numéro Étudiant : {{ $informationsPersonnelles['numeroEtudiant'] }}</p>
     </div>
+
     <div class="bg-white rounded-lg shadow-md p-6">
-        <h2 class="text-lg font-bold mb-4">Prochains Cours</h2>
-        <ul class="space-y-2">
-            @foreach ($prochainsCours as $cours)
-            <li>
-                <h3 class="font-semibold">{{ $cours->module->name }}</h3>
-                <p class="text-gray-500">{{ $cours->date->format('H:i') }} - {{ $cours->date->addHours(2)->format('H:i') }}, Salle {{ $cours->salle }}, Professeur : {{ $cours->professeur->name }}</p>
-            </li>
-            @endforeach
-        </ul>
+        <h2 class="text-lg font-bold mb-4">Taux de Présence</h2>
+        <div class="flex justify-center">
+            <canvas id="presenceRateChart" width="200" height="200"></canvas>
+        </div>
+        <script>
+            var ctx = document.getElementById('presenceRateChart').getContext('2d');
+            var presenceRateChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    datasets: [{
+                        data: [{{ round($tauxPresence, 2) }}, 100 - {{ round($tauxPresence, 2) }}],
+                        backgroundColor: ['{{ $tauxPresenceColor }}', '#e0e0e0']
+                    }]
+                },
+                options: {
+                    cutoutPercentage: 70,
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '{{ round($tauxPresence, 2) }}%'
+                        },
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        </script>
+        <p class="{{ $tauxPresenceColor }} mt-4">{{ $tauxPresenceMessage }}</p>
     </div>
+
     <div class="bg-white rounded-lg shadow-md p-6">
         <h2 class="text-lg font-bold mb-4">Actions Rapides</h2>
         <ul class="space-y-2">

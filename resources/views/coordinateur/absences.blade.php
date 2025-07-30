@@ -40,6 +40,7 @@
                             <th class="px-6 py-4 text-left font-medium text-gray-700 uppercase tracking-wider">Classe</th>
                             <th class="px-6 py-4 text-left font-medium text-gray-700 uppercase tracking-wider">Étudiant</th>
                             <th class="px-6 py-4 text-left font-medium text-gray-700 uppercase tracking-wider">Date</th>
+                            <th class="px-6 py-4 text-left font-medium text-gray-700 uppercase tracking-wider">Motif</th>
                             <th class="px-6 py-4 text-left font-medium text-gray-700 uppercase tracking-wider">Statut</th>
                             <th class="px-6 py-4 text-left font-medium text-gray-700 uppercase tracking-wider">Actions</th>
                         </tr>
@@ -63,6 +64,9 @@
                                     <div class="text-sm text-gray-900">{{ $demande->created_at->format('Y-m-d') }}</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900">{{ $demande->motif }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
                                     <span
                                         class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-{{ $demande->justifie ? 'green' : 'yellow' }}-100 text-{{ $demande->justifie ? 'green' : 'yellow' }}-800">
                                         {{ $demande->justifie ? 'Justifiée' : 'En attente' }}
@@ -70,7 +74,7 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     @if (!$demande->justifie)
-                                        <form method="POST" action="{{ route('justifierAbsence', $demande->id) }}">
+                                        <form method="POST" action="">
                                             @csrf
                                             <button type="submit" name="accepter"
                                                 class="text-green-600 hover:text-green-900 mr-2">Accepter</button>
