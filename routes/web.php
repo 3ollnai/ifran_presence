@@ -58,7 +58,8 @@ Route::prefix('coordinateur')->name('coordinateur.')->middleware(['auth', 'role:
     Route::get('seances/{seance}/presence', [CoordinateurController::class, 'presence'])->name('seances.presence');
     Route::post('seances/{seance}/presence', [CoordinateurController::class, 'storePresence'])->name('seances.storePresence');
     Route::get('/absences', [CoordinateurController::class, 'absences'])->name('absences');
-    Route::post('/absences', [CoordinateurController::class, 'justifierAbsence']);
+    Route::post('/absences/{presence}/justifier', 'AbsenceController@justifierAbsence')->name('justifierAbsence');
+
 
 
     Route::get('/emploi', [CoordinateurController::class, 'emploi'])->name('emploi');

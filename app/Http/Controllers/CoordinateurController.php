@@ -270,33 +270,37 @@ class CoordinateurController extends Controller
     /**
      * Justification d'une absence
      */
-    public function justifierAbsence(Request $request, $presence_id)
-    {
-        $presence = Presence::findOrFail($presence_id); // Récupérer la présence par ID
+/**
+ * Justification d'une absence
+ */
+public function justifierAbsence(Request $request, $presence_id)
+{
+    $presence = Presence::findOrFail($presence_id); // Récupérer la présence par ID
 
-        // Créer un nouveau statut de justification
-        $statutJustification = new StatutJustification();
-        $statutJustification->presence_id = $presence->id;
+    // Créer un nouveau statut de justification
+    $statutJustification = new StatutJustification();
+    $statutJustification->presence_id = $presence->id;
 
-        $message = '';
-        if ($request->has('accepter')) {
-            $statutJustification->statut = 'Acceptée';
-            $presence->justifie = true;
-            $message = 'Absence justifiée.';
-        } elseif ($request->has('rejeter')) {
-            $statutJustification->statut = 'Rejetée';
-            $presence->justifie = false;
-            $message = 'Absence rejetée.';
-        } else {
-            return back()->withErrors('Vous devez sélectionner une action (Accepter ou Rejeter).');
-        }
-
-        $statutJustification->save();
-        $presence->save();
-
-        // Rediriger vers la vue des absences avec un message de succès
-        return redirect()->route('absences')->with('success', $message);
+    $message = '';
+    if ($request->has('accepter')) {
+        $statutJustification->statut = 'Acceptée';
+        $presence->justifie = true;
+        $message = 'Absence justifiée.';
+    } elseif ($request->has('rejeter')) {
+        $statutJustification->statut = 'Rejetée';
+        $presence->justifie = false;
+        $message = 'Absence rejetée.';
+    } else {
+        return back()->withErrors('Vous devez sélectionner une action (Accepter ou Rejeter).');
     }
+
+    $statutJustification->save();
+    $presence->save();
+
+    // Rediriger vers la vue des absences avec un message de succès
+    return redirect()->route('absences')->with('success', $message);
+}
+
 
     /**
      * Statistiques et graphiques (taux de présence, etc.)
