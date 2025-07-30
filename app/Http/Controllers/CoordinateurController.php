@@ -26,57 +26,64 @@ class CoordinateurController extends Controller
      * Tableau de bord : liste des classes et accès rapide aux séances
      */
     public function index()
-    {
-        $classes = Classe::all();
+{
+    $classes = Classe::all();
 
-        // Comptez le nombre d'étudiants et d'enseignants
-        $etudiants_count = Etudiant::count();
-        $professeur_count = Professeur::count();
-        $seances_count = Seance::count();
-        $classe_count = Classe::count();
+    // Comptez le nombre d'étudiants et d'enseignants
+    $etudiants_count = Etudiant::count();
+    $professeur_count = Professeur::count();
+    $seances_count = Seance::count();
+    $classe_count = Classe::count();
 
-        // Calcul des données pour le graphique des présences par classe
-        $classe_labels = [];
-        $classe_presences = [];
-        foreach ($classes as $classe) {
-            $classe_labels[] = $classe->nom;
+    // Calcul des données pour le graphique des présences par classe
+    $classe_labels = [];
+    $classe_presences = [];
+    foreach ($classes as $classe) {
+        $classe_labels[] = $classe->nom;
 
-            $totalSeances = Seance::where('classe_id', $classe->id)->count();
-            $totalPresences = StatutPresence::whereHas('presence', function ($query) use ($classe) {
-                $query->whereHas('seance', function ($q) use ($classe) {
-                    $q->where('classe_id', $classe->id);
-                });
-            })->where('statut', 'Présent')->count();
-            $totalAbsences = StatutPresence::whereHas('presence', function ($query) use ($classe) {
-                $query->whereHas('seance', function ($q) use ($classe) {
-                    $q->where('classe_id', $classe->id);
-                });
-            })->where('statut', 'Absent')->count();
+        $totalSeances = Seance::where('classe_id', $classe->id)->count();
+        $totalPresences = StatutPresence::whereHas('presence', function ($query) use ($classe) {
+            $query->whereHas('seance', function ($q) use ($classe) {
+                $q->where('classe_id', $classe->id);
+            });
+        })->where('statut', 'Présent')->count();
+        $totalAbsences = StatutPresence::whereHas('presence', function ($query) use ($classe) {
+            $query->whereHas('seance', function ($q) use ($classe) {
+                $q->where('classe_id', $classe->id);
+            });
+        })->where('statut', 'Absent')->count();
 
-            $tauxPresenceMoyen = ($totalSeances > 0) ? round(($totalPresences / ($totalPresences + $totalAbsences)) * 100, 2) : 0;
-            $classe_presences[] = $tauxPresenceMoyen;
-        }
+        // Vérification pour éviter la division par zéro
+        $totalParticipants = $totalPresences + $totalAbsences;
+        $tauxPresenceMoyen = ($totalParticipants > 0) ? round(($totalPresences / $totalParticipants) * 100, 2) : 0;
 
-        // Calcul des données pour le graphique des présences par séance
-        $seance_labels = Seance::orderBy('date', 'desc')->take(10)->pluck('date')->toArray();
-        $seance_presences = [];
-        foreach ($seance_labels as $seanceDate) {
-            $totalPresences = StatutPresence::whereHas('presence', function ($query) use ($seanceDate) {
-                $query->whereHas('seance', function ($q) use ($seanceDate) {
-                    $q->where('date', $seanceDate);
-                });
-            })->where('statut', 'Présent')->count();
-            $totalAbsences = StatutPresence::whereHas('presence', function ($query) use ($seanceDate) {
-                $query->whereHas('seance', function ($q) use ($seanceDate) {
-                    $q->where('date', $seanceDate);
-                });
-            })->where('statut', 'Absent')->count();
-            $totalEtudiants = Etudiant::count();
-            $seance_presences[] = ($totalEtudiants > 0) ? min(100, round(($totalPresences / ($totalPresences + $totalAbsences)) * 100, 2)) : 0;
-        }
-
-        return view('coordinateur.index', compact('classes', 'etudiants_count', 'professeur_count', 'seances_count', 'classe_count', 'classe_labels', 'classe_presences', 'seance_labels', 'seance_presences'));
+        $classe_presences[] = $tauxPresenceMoyen;
     }
+
+    // Calcul des données pour le graphique des présences par séance
+    $seance_labels = Seance::orderBy('date', 'desc')->take(10)->pluck('date')->toArray();
+    $seance_presences = [];
+    foreach ($seance_labels as $seanceDate) {
+        $totalPresences = StatutPresence::whereHas('presence', function ($query) use ($seanceDate) {
+            $query->whereHas('seance', function ($q) use ($seanceDate) {
+                $q->where('date', $seanceDate);
+            });
+        })->where('statut', 'Présent')->count();
+        $totalAbsences = StatutPresence::whereHas('presence', function ($query) use ($seanceDate) {
+            $query->whereHas('seance', function ($q) use ($seanceDate) {
+                $q->where('date', $seanceDate);
+            });
+        })->where('statut', 'Absent')->count();
+
+        // Vérification pour éviter la division par zéro
+        $totalEtudiants = Etudiant::count();
+        $totalParticipants = $totalPresences + $totalAbsences;
+        $seance_presences[] = ($totalParticipants > 0) ? min(100, round(($totalPresences / $totalParticipants) * 100, 2)) : 0;
+    }
+
+    return view('coordinateur.index', compact('classes', 'etudiants_count', 'professeur_count', 'seances_count', 'classe_count', 'classe_labels', 'classe_presences', 'seance_labels', 'seance_presences'));
+}
+
 
     /**
      * Liste des séances
@@ -174,36 +181,39 @@ class CoordinateurController extends Controller
     /**
      * Affichage de l'emploi du temps
      */
-    public function emploi(Request $request)
-    {
-        $query = Seance::with(['classe', 'typeCours', 'professeur.user', 'module']);
+  public function emploi(Request $request)
+{
+    $query = Seance::with(['classe', 'typeCours', 'professeur.user', 'module']);
 
-        // Filtrer par module
-        if ($selectedModule = $request->input('module')) {
-            $query->whereHas('module', function ($q) use ($selectedModule) {
-                $q->where('nom', $selectedModule);
-            });
-        }
-
-        // Filtrer par classe
-        if ($selectedClasse = $request->input('classe')) {
-            $query->whereHas('classe', function ($q) use ($selectedClasse) {
-                $q->where('nom', $selectedClasse);
-            });
-        }
-
-        // Filtrer par date
-        if ($jourDebut = $request->input('jour_debut') && $jourFin = $request->input('jour_fin')) {
-            $query->whereBetween('date', [date('Y-m-d', strtotime($jourDebut)), date('Y-m-d', strtotime($jourFin))]);
-        }
-
-        $seances = $query->orderBy('date', 'desc')->paginate(12);
-        $groupedSeances = $seances->groupBy(function ($seance) {
-            return $seance->classe ? $seance->classe->nom : 'Non assigné';
+    // Filtrer par module
+    if ($selectedModule = $request->input('module')) {
+        $query->whereHas('module', function ($q) use ($selectedModule) {
+            $q->where('nom', $selectedModule);
         });
-
-        return view('coordinateur.emploi', compact('groupedSeances', 'selectedClasse', 'jourDebut', 'jourFin', 'seances'));
     }
+
+    // Filtrer par classe
+    if ($selectedClasse = $request->input('classe')) {
+        $query->whereHas('classe', function ($q) use ($selectedClasse) {
+            $q->where('nom', $selectedClasse);
+        });
+    }
+
+    // Filtrer par date
+    $jourDebut = $request->input('jour_debut');
+    $jourFin = $request->input('jour_fin');
+
+    if ($jourDebut && $jourFin) {
+        $query->whereBetween('date', [date('Y-m-d', strtotime($jourDebut)), date('Y-m-d', strtotime($jourFin))]);
+    }
+
+    $seances = $query->orderBy('date', 'desc')->paginate(12);
+    $groupedSeances = $seances->groupBy(function ($seance) {
+        return $seance->classe ? $seance->classe->nom : 'Non assigné';
+    });
+
+    return view('coordinateur.emploi', compact('groupedSeances', 'selectedClasse', 'jourDebut', 'jourFin', 'seances'));
+}
 
     /**
      * Saisie des présences pour une séance (par le coordinateur)

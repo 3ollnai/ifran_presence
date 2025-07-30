@@ -20,8 +20,8 @@ class Classe extends Model
         return $this->belongsTo(Filiere::class);
     }
 
-       public function etudiant()
+      public function etudiants()
     {
-        return $this->belongsTo(Etudiant::class);
+        return $this->hasMany(Etudiant::class);
     }
 }
