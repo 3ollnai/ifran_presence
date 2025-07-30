@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Presence extends Model
 {
-    protected $fillable = ['seance_id', 'eleve_id'];
+    protected $fillable = ['seance_id', 'eleve_id', 'justifie'];
 
 
 
@@ -15,15 +15,16 @@ class Presence extends Model
         return $this->belongsTo(Etudiant::class, 'eleve_id');
     }
 
-   public function seance()
+     public function statut()
+    {
+        return $this->hasOne(StatutPresence::class);
+    }
+
+    public function seance()
     {
         return $this->belongsTo(Seance::class);
     }
 
-    public function statut()
-    {
-        return $this->hasMany(StatutPresence::class);
-    }
     public function justificationAbsence()
     {
         return $this->hasOne(JustificationAbsence::class);

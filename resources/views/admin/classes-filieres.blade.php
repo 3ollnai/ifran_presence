@@ -31,19 +31,16 @@
                         @foreach ($classes as $classe)
                             <tr>
                                 <td class="px-4 py-2">{{ $classe->nom }}</td>
-                                <td class="px-4 py-2">{{ $classe->filiere->nom }}</td>
+                                <td class="px-4 py-2">{{ $classe->filiere->nom ?? 'Aucune' }}</td>
                                 <td class="px-4 py-2">
                                     <div class="flex justify-end space-x-2">
-                                        <button
-                                            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                                        <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                                             Modifier
                                         </button>
-                                        <button
-                                            class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+                                        <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
                                             Supprimer
                                         </button>
-                                        <button
-                                            class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+                                        <button class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
                                             onclick="toggleStudentsList({{ $classe->id }})">
                                             Voir Étudiants
                                         </button>
@@ -56,7 +53,7 @@
                                         <h5 class="font-bold">Étudiants dans cette classe :</h5>
                                         <ul class="list-disc pl-6">
                                             @forelse ($classe->etudiants as $etudiant)
-                                                <li>{{ $etudiant->user->prenom }} {{ $etudiant->user->nom }}</li>
+                                                <li>{{ $etudiant->user->prenom ?? 'Inconnu' }} {{ $etudiant->user->nom ?? 'Inconnu' }}</li>
                                             @empty
                                                 <li>Aucun étudiant inscrit dans cette classe.</li>
                                             @endforelse

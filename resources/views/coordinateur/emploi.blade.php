@@ -33,10 +33,12 @@
                     <select id="module-select"
                         class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500">
                         <option value="">Tous les modules</option>
-                        @foreach ($seances as $seance)
-                            @if ($seance->module)
-                                <option value="{{ $seance->module->nom }}">{{ $seance->module->nom }}</option>
-                            @endif
+                        @foreach ($groupedSeances as $classe => $seances)
+                            @foreach ($seances as $seance)
+                                @if ($seance->module)
+                                    <option value="{{ $seance->module->nom }}">{{ $seance->module->nom }}</option>
+                                @endif
+                            @endforeach
                         @endforeach
                     </select>
                 </div>

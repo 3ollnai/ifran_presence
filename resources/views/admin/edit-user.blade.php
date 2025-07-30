@@ -24,7 +24,7 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ route('admin.users.edit', $user->id) }}" class="space-y-5">
+    <form method="POST" action="{{ route('admin.users.update', $user->id) }} class="space-y-5">
         @csrf
         @method('PUT')
 

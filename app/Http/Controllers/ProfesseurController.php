@@ -50,53 +50,52 @@ class ProfesseurController extends Controller
         ]);
     }
 
-public function markPresence(Request $request, $id)
-{
-    $seance = Seance::findOrFail($id);
-    $etudiants = array_keys($request->input('etudiants', [])); // Récupère les IDs des étudiants présents
+    public function markPresence(Request $request, $id)
+    {
+        $seance = Seance::findOrFail($id);
+        $etudiants = $request->input('etudiants', []);
 
-    foreach ($seance->classe->etudiants as $etudiant) {
-        // Récupérer la présence existante pour l'étudiant
-        $presence = Presence::where('seance_id', $seance->id)
-            ->where('eleve_id', $etudiant->id)
-            ->first();
-
-        if ($presence) {
-            // Récupérer le dernier statut de présence
-            $statut = StatutPresence::where('presence_id', $presence->id)
-                ->orderBy('created_at', 'desc')
+        foreach ($seance->classe->etudiants as $etudiant) {
+            // Récupérer la présence existante pour l'étudiant
+            $presence = Presence::where('seance_id', $seance->id)
+                ->where('eleve_id', $etudiant->id)
                 ->first();
 
-            // Vérifier si le statut existe avant de le mettre à jour
-            if ($statut) {
-                if (in_array($etudiant->id, $etudiants)) {
-                    if ($request->input('etudiants.' . $etudiant->id) == 'Retard') {
-                        $statut->update(['statut' => 'Retard']);
+            if ($presence) {
+                // Récupérer le dernier statut de présence
+                $statut = StatutPresence::where('presence_id', $presence->id)
+                    ->orderBy('created_at', 'desc')
+                    ->first();
+
+                // Vérifier si le statut existe avant de le mettre à jour
+                if ($statut) {
+                    if (array_key_exists($etudiant->id, $etudiants)) {
+                        if ($etudiants[$etudiant->id] == 'Retard') {
+                            $statut->update(['statut' => 'Retard']);
+                        } else {
+                            $statut->update(['statut' => 'Présent']);
+                        }
                     } else {
-                        $statut->update(['statut' => 'Présent']);
+                        $statut->update(['statut' => 'Absent']);
                     }
-                } else {
-                    $statut->update(['statut' => 'Absent']);
                 }
+            } else {
+                // Crée une nouvelle présence
+                $presence = Presence::create([
+                    'seance_id' => $seance->id,
+                    'eleve_id' => $etudiant->id,
+                ]);
+
+                // Crée un nouveau statut de présence
+                StatutPresence::create([
+                    'presence_id' => $presence->id,
+                    'statut' => array_key_exists($etudiant->id, $etudiants) ? ($etudiants[$etudiant->id] == 'Retard' ? 'Retard' : 'Présent') : 'Absent',
+                ]);
             }
-        } else {
-            // Crée une nouvelle présence
-            $presence = Presence::create([
-                'seance_id' => $seance->id,
-                'eleve_id' => $etudiant->id,
-            ]);
-
-            // Crée un nouveau statut de présence
-            StatutPresence::create([
-                'presence_id' => $presence->id,
-                'statut' => in_array($etudiant->id, $etudiants) ? ($request->input('etudiants.' . $etudiant->id) == 'Retard' ? 'Retard' : 'Présent') : 'Absent',
-            ]);
         }
+
+        return redirect()->route('professeur.index')->with('success', 'Présences enregistrées avec succès.');
     }
-
-    return redirect()->route('professeur.index')->with('success', 'Présences enregistrées avec succès.');
-}
-
 
     public function showSeance($id)
     {
@@ -107,61 +106,65 @@ public function markPresence(Request $request, $id)
         return view('professeur.showSeance', compact('seance'));
     }
 
+    public function historique()
+    {
+        $professeur = Professeur::where('user_id', Auth::id())->first();
+        $seances = Seance::where('professeur_id', $professeur->id)
+            ->with(['classe', 'module', 'presences', 'presences.etudiant.user'])
+            ->orderBy('date', 'desc')
+            ->get();
 
-public function historique()
-{
-    $professeur = Professeur::where('user_id', Auth::id())->first();
-    $seances = Seance::where('professeur_id', $professeur->id)
-        ->with(['classe', 'module', 'presences', 'presences.etudiant.user'])
-        ->orderBy('date', 'desc')
-        ->get();
+        $seanceEtudiantCount = [];
+        foreach ($seances as $seance) {
+            $seanceEtudiantCount[$seance->id] = $seance->classe->etudiants->count();
+        }
 
-    $absencesNonJustifiees = Presence::whereHas('statut', function ($query) {
-        $query->where('statut', 'Absent');
-    })
-    ->whereHas('seance', function ($query) use ($professeur) {
-        $query->where('professeur_id', $professeur->id);
-    })
-    ->with(['seance', 'etudiant.user'])
-    ->orderBy('created_at', 'desc')
-    ->limit(1)
-    ->get();
+        $absencesNonJustifiees = Presence::whereHas('statut', function ($query) {
+            $query->where('statut', 'Absent');
+        })
+            ->whereHas('seance', function ($query) use ($professeur) {
+                $query->where('professeur_id', $professeur->id);
+            })
+            ->with(['seance', 'etudiant.user'])
+            ->orderBy('created_at', 'desc')
+            ->limit(1)
+            ->get();
 
-    $totalClassesEnseignees = $seances->count();
-    $classesCurrentMois = Seance::where('professeur_id', $professeur->id)
-        ->whereMonth('date', now()->month)
-        ->count();
+        $totalClassesEnseignees = $seances->count();
+        $classesCurrentMois = Seance::where('professeur_id', $professeur->id)
+            ->whereMonth('date', now()->month)
+            ->count();
 
-    $presenceChartLabels = [];
-    $presenceChartData = [];
+        $presenceChartLabels = [];
+        $presenceChartData = [];
 
-    foreach ($seances as $seance) {
-        $presenceChartLabels[] = Carbon::parse($seance->date)->format('d/m');
-        $presenceChartData[] = $seance->presences->where('statut.statut', 'Présent')->count() / $seance->classe->etudiants->count() * 100;
+        foreach ($seances as $seance) {
+            $presenceChartLabels[] = Carbon::parse($seance->date)->format('d/m');
+            $presenceChartData[] = $seance->presences->where('statut.statut', 'Présent')->count() / $seance->classe->etudiants->count() * 100;
+        }
+
+        $etudiantsTotal = Etudiant::count();
+        $tauxPresenceMoyen = round(array_sum($presenceChartData) / count($presenceChartData), 2);
+
+        $absencesRecentes = Presence::whereHas('seance', function ($query) use ($professeur) {
+            $query->where('professeur_id', $professeur->id);
+        })
+            ->with(['seance', 'seance.module', 'etudiant.user', 'statut'])
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get();
+
+        return view('professeur.historique-presence', [
+            'absencesNonJustifiees' => $absencesNonJustifiees,
+            'totalClassesEnseignees' => $totalClassesEnseignees,
+            'classesCurrentMois' => $classesCurrentMois,
+            'presenceChartLabels' => $presenceChartLabels,
+            'presenceChartData' => $presenceChartData,
+            'etudiantsTotal' => $etudiantsTotal,
+            'tauxPresenceMoyen' => $tauxPresenceMoyen,
+            'absencesRecentes' => $absencesRecentes,
+            'seances' => $seances,
+            'seanceEtudiantCount' => $seanceEtudiantCount,
+        ]);
     }
-
-    $etudiantsTotal = Etudiant::count();
-    $tauxPresenceMoyen = round(array_sum($presenceChartData) / count($presenceChartData), 2);
-
-    $absencesRecentes = Presence::whereHas('seance', function ($query) use ($professeur) {
-        $query->where('professeur_id', $professeur->id);
-    })
-    ->with(['seance', 'seance.module', 'etudiant.user', 'statut'])
-    ->orderBy('created_at', 'desc')
-    ->limit(10)
-    ->get();
-
-    return view('professeur.historique-presence', [
-        'absencesNonJustifiees' => $absencesNonJustifiees,
-        'totalClassesEnseignees' => $totalClassesEnseignees,
-        'classesCurrentMois' => $classesCurrentMois,
-        'presenceChartLabels' => $presenceChartLabels,
-        'presenceChartData' => $presenceChartData,
-        'etudiantsTotal' => $etudiantsTotal,
-        'tauxPresenceMoyen' => $tauxPresenceMoyen,
-        'absencesRecentes' => $absencesRecentes,
-    ]);
-}
-
-
 }

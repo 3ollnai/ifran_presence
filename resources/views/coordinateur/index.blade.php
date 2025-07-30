@@ -22,7 +22,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <h3 class="text-lg font-semibold">Nombre d'Enseignants</h3>
-                    <p class="text-4xl font-bold text-violet-600">{{$professeur_count}}</p>
+                    <p class="text-4xl font-bold text-violet-600">{{ $professeur_count }}</p>
                 </div>
                 <svg class="w-12 h-12 text-violet-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -34,7 +34,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <h3 class="text-lg font-semibold">Nombre de Séances</h3>
-                    <p class="text-4xl font-bold text-violet-600">{{$seances_count}}</p>
+                    <p class="text-4xl font-bold text-violet-600">{{ $seances_count }}</p>
                 </div>
                 <svg class="w-12 h-12 text-violet-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -46,7 +46,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <h3 class="text-lg font-semibold">Nombre de Classes</h3>
-                    <p class="text-4xl font-bold text-violet-600">{{$classe_count}}</p>
+                    <p class="text-4xl font-bold text-violet-600">{{ $classe_count }}</p>
                 </div>
                 <svg class="w-12 h-12 text-violet-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
@@ -71,59 +71,89 @@
 @endsection
 
 @section('scripts')
-    {{-- <script>
-        // Données pour le graphique des présences par classe
-        var classeLabels = [{{ implode(',', $classe_labels) }}];
-        var classePresences = [{{ implode(',', $classe_presences) }}];
+    <script>
 
-        // Données pour le graphique des présences par séance
-        var seanceLabels = [{{ implode(',', $seance_labels) }}];
-        var seancePresences = [{{ implode(',', $seance_presences) }}];
+        var classeLabels = {!! json_encode($classe_labels) !!};
+        var classePresences = {!! json_encode($classe_presences) !!};
 
-        // Initialisation du graphique des présences par classe
+
+        var seanceLabels = {!! json_encode($seance_labels) !!};
+        var seancePresences = {!! json_encode($seance_presences) !!};
+
+
+        function getColor(taux) {
+            if (taux >= 90) {
+                return 'green'; // Près de 100%
+            } else if (taux >= 50) {
+                return 'orange'; // Entre 50% et 90%
+            } else {
+                return 'red'; // Près de 0%
+            }
+        }
+
+
+        var classeColors = classePresences.map(getColor);
+
+
+        var seanceColors = seancePresences.map(getColor);
+
+
         var ctx = document.getElementById('presencesChart').getContext('2d');
         new Chart(ctx, {
             type: 'bar',
             data: {
                 labels: classeLabels,
-                datasets: [{
-                    label: 'Présences',
-                    data: classePresences,
-                    backgroundColor: '#7c3aed',
-                    borderColor: '#7c3aed',
-                    borderWidth: 1
-                }]
+                datasets: [
+                    {
+                        label: 'Taux de Présence (%)',
+                        data: classePresences,
+                        backgroundColor: classeColors,
+                        borderColor: classeColors,
+                        borderWidth: 1
+                    }
+                ]
             },
             options: {
                 scales: {
                     y: {
-                        beginAtZero: true
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            stepSize: 10
+                        }
                     }
                 }
             }
         });
 
-        // Initialisation du graphique des présences par séance
+        
         var ctx2 = document.getElementById('seancesChart').getContext('2d');
         new Chart(ctx2, {
             type: 'line',
             data: {
-                labels: seanceLabels,
-                datasets: [{
-                    label: 'Présences',
-                    data: seancePresences,
-                    backgroundColor: '#7c3aed',
-                    borderColor: '#7c3aed',
-                    borderWidth: 2
-                }]
+                labels: seanceLabels.reverse(),
+                datasets: [
+                    {
+                        label: 'Taux de Présence (%)',
+                        data: seancePresences.reverse(),
+                        backgroundColor: 'rgba(124, 56, 237, 0.5)',
+                        borderColor: seanceColors,
+                        borderWidth: 2,
+                        fill: false
+                    }
+                ]
             },
             options: {
                 scales: {
                     y: {
-                        beginAtZero: true
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            stepSize: 10
+                        }
                     }
                 }
             }
         });
-    </script> --}}
+    </script>
 @endsection

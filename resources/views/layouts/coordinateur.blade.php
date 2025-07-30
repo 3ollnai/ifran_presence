@@ -58,7 +58,7 @@
                         <li>
                             <a href="{{ route('coordinateur.emploi') }}"
                                 class="flex items-center px-6 py-3 font-semibold rounded-r-full mb-2
-        {{ request()->routeIs('coordinateur.emploi') ? 'text-violet-700 bg-violet-100' : 'text-gray-700 hover:bg-violet-50' }}">
+                                {{ request()->routeIs('coordinateur.emploi') ? 'text-violet-700 bg-violet-100' : 'text-gray-700 hover:bg-violet-50' }}">
                                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" stroke-width="2"
                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h18v18H3V3z"></path>
@@ -67,19 +67,18 @@
                             </a>
                         </li>
                         <li>
-                            <a href=""
+                            <a href="{{ route('coordinateur.absences') }}"
                                 class="flex items-center px-6 py-3 font-semibold rounded-r-full mb-2
-                                 'text-violet-700 bg-violet-100' : 'text-gray-700 hover:bg-violet-50' }}">
+                                {{ request()->routeIs('coordinateur.absences') ? 'text-violet-700 bg-violet-100' : 'text-gray-700 hover:bg-violet-50' }}">
                                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" stroke-width="2"
                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round"
                                         d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
                                     </path>
                                 </svg>
-                                Présence
+                                Absences
                             </a>
                         </li>
-
                     </ul>
                 </nav>
             </div>

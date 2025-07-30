@@ -46,10 +46,8 @@
                         <th class="px-2 py-3 text-left font-bold text-gray-600 uppercase">Type</th>
                         <th class="px-2 py-3 text-left font-bold text-gray-600 uppercase">Classe</th>
                         <th class="px-2 py-3 text-left font-bold text-gray-600 uppercase hidden md:table-cell">Module</th>
-                        <th class="px-2 py-3 text-left font-bold text-gray-600 uppercase hidden lg:table-cell">Professeur
-                        </th>
-                        <th class="px-2 py-3 text-center font-bold text-gray-600 uppercase hidden xl:table-cell">Présences
-                        </th>
+                        <th class="px-2 py-3 text-left font-bold text-gray-600 uppercase hidden lg:table-cell">Professeur</th>
+                        <th class="px-2 py-3 text-center font-bold text-gray-600 uppercase hidden xl:table-cell">Présences</th>
                         <th class="px-2 py-3 text-center font-bold text-gray-600 uppercase">Actions</th>
                     </tr>
                 </thead>
@@ -88,8 +86,7 @@
                                 @endif
                             </td>
                             <td class="px-2 py-3 text-center hidden xl:table-cell">
-                                <span
-                                    class="inline-flex items-center px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">
+                                <span class="inline-flex items-center px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">
                                     {{ $seance->presences()->count() }}
                                 </span>
                             </td>
@@ -121,14 +118,11 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="9" class="px-6 py-8 text-center text-gray-400 text-lg">Aucune séance trouvée
-                            </td>
+                            <td colspan="9" class="px-6 py-8 text-center text-gray-400 text-lg">Aucune séance trouvée</td>
                         </tr>
                     @endforelse
                 </tbody>
-
             </table>
-
         </div>
         <div class="mt-6 flex justify-center">
             {{ $seances->links() }}

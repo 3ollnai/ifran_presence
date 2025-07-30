@@ -4,6 +4,13 @@
 <div class="bg-white shadow-lg rounded-lg p-6">
     <h1 class="text-3xl font-bold mb-6 text-center text-indigo-700">Saisie des Présences</h1>
 
+    @if(session('error'))
+    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4" role="alert">
+        <strong class="font-bold">Erreur !</strong>
+        <span class="block sm:inline">{{ session('error') }}</span>
+    </div>
+    @endif
+
     <form action="{{ route('professeur.markPresence', $seance->id) }}" method="POST">
         @csrf
 

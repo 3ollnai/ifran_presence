@@ -8,7 +8,9 @@ use App\Models\Classe;
 use App\Models\Etudiant;
 use App\Models\Professeur;
 use App\Models\Presence;
+use App\Models\StatutPresence;
 use App\Models\Module;
+use App\Models\StatutJustification;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 
@@ -33,7 +35,47 @@ class CoordinateurController extends Controller
         $seances_count = Seance::count();
         $classe_count = Classe::count();
 
-        return view('coordinateur.index', compact('classes', 'etudiants_count', 'professeur_count', 'seances_count', 'classe_count'));
+        // Calcul des données pour le graphique des présences par classe
+        $classe_labels = [];
+        $classe_presences = [];
+        foreach ($classes as $classe) {
+            $classe_labels[] = $classe->nom;
+
+            $totalSeances = Seance::where('classe_id', $classe->id)->count();
+            $totalPresences = StatutPresence::whereHas('presence', function ($query) use ($classe) {
+                $query->whereHas('seance', function ($q) use ($classe) {
+                    $q->where('classe_id', $classe->id);
+                });
+            })->where('statut', 'Présent')->count();
+            $totalAbsences = StatutPresence::whereHas('presence', function ($query) use ($classe) {
+                $query->whereHas('seance', function ($q) use ($classe) {
+                    $q->where('classe_id', $classe->id);
+                });
+            })->where('statut', 'Absent')->count();
+
+            $tauxPresenceMoyen = ($totalSeances > 0) ? round(($totalPresences / ($totalPresences + $totalAbsences)) * 100, 2) : 0;
+            $classe_presences[] = $tauxPresenceMoyen;
+        }
+
+        // Calcul des données pour le graphique des présences par séance
+        $seance_labels = Seance::orderBy('date', 'desc')->take(10)->pluck('date')->toArray();
+        $seance_presences = [];
+        foreach ($seance_labels as $seanceDate) {
+            $totalPresences = StatutPresence::whereHas('presence', function ($query) use ($seanceDate) {
+                $query->whereHas('seance', function ($q) use ($seanceDate) {
+                    $q->where('date', $seanceDate);
+                });
+            })->where('statut', 'Présent')->count();
+            $totalAbsences = StatutPresence::whereHas('presence', function ($query) use ($seanceDate) {
+                $query->whereHas('seance', function ($q) use ($seanceDate) {
+                    $q->where('date', $seanceDate);
+                });
+            })->where('statut', 'Absent')->count();
+            $totalEtudiants = Etudiant::count();
+            $seance_presences[] = ($totalEtudiants > 0) ? min(100, round(($totalPresences / ($totalPresences + $totalAbsences)) * 100, 2)) : 0;
+        }
+
+        return view('coordinateur.index', compact('classes', 'etudiants_count', 'professeur_count', 'seances_count', 'classe_count', 'classe_labels', 'classe_presences', 'seance_labels', 'seance_presences'));
     }
 
     /**
@@ -42,21 +84,14 @@ class CoordinateurController extends Controller
     public function seances(Request $request)
     {
         $module_id = $request->input('module_id');
+        $query = Seance::with(['module', 'typeCours', 'professeur.user', 'classe']);
 
         if ($module_id) {
-            $module = Module::findOrFail($module_id);
-            $seances = Seance::with(['module', 'typeCours', 'professeur.user', 'classe'])
-                ->where('module_id', $module_id)
-                ->orderBy('date')
-                ->paginate(10);
-        } else {
-            $module = null;
-            $seances = Seance::with(['module', 'typeCours', 'professeur.user', 'classe'])
-                ->orderBy('created_at', 'desc')
-                ->paginate(10);
+            $query->where('module_id', $module_id);
         }
 
-        return view('coordinateur.seances', compact('module', 'seances'));
+        $seances = $query->orderBy('date')->paginate(10);
+        return view('coordinateur.seances', compact('module_id', 'seances'));
     }
 
     /**
@@ -88,7 +123,6 @@ class CoordinateurController extends Controller
         ]);
 
         Seance::create($request->all());
-
         return redirect()->route('coordinateur.seances')->with('success', 'Séance ajoutée avec succès.');
     }
 
@@ -106,6 +140,9 @@ class CoordinateurController extends Controller
         return view('coordinateur.edit-seance', compact('seance', 'professeurs', 'classes', 'modules', 'typesCours'));
     }
 
+    /**
+     * Mise à jour d'une séance
+     */
     public function updateSeance(Request $request, $seance_id)
     {
         $seance = Seance::findOrFail($seance_id);
@@ -121,42 +158,42 @@ class CoordinateurController extends Controller
         ]);
 
         $seance->update($request->all());
-
         return redirect()->route('coordinateur.seances')->with('success', 'Séance modifiée avec succès.');
     }
 
+    /**
+     * Suppression d'une séance
+     */
     public function destroySeance($id)
     {
         $seance = Seance::findOrFail($id);
         $seance->delete();
-
         return redirect()->route('coordinateur.seances')->with('success', 'Séance supprimée avec succès.');
     }
 
+    /**
+     * Affichage de l'emploi du temps
+     */
     public function emploi(Request $request)
     {
         $query = Seance::with(['classe', 'typeCours', 'professeur.user', 'module']);
 
         // Filtrer par module
-        $selectedModule = $request->input('module', '');
-        if ($selectedModule) {
+        if ($selectedModule = $request->input('module')) {
             $query->whereHas('module', function ($q) use ($selectedModule) {
                 $q->where('nom', $selectedModule);
             });
         }
 
         // Filtrer par classe
-        $selectedClasse = $request->input('classe', '');
-        if ($selectedClasse) {
+        if ($selectedClasse = $request->input('classe')) {
             $query->whereHas('classe', function ($q) use ($selectedClasse) {
                 $q->where('nom', $selectedClasse);
             });
         }
 
         // Filtrer par date
-        $jourDebut = $request->input('jour_debut');
-        $jourFin = $request->input('jour_fin');
-        if ($jourDebut && $jourFin) {
+        if ($jourDebut = $request->input('jour_debut') && $jourFin = $request->input('jour_fin')) {
             $query->whereBetween('date', [date('Y-m-d', strtotime($jourDebut)), date('Y-m-d', strtotime($jourFin))]);
         }
 
@@ -165,9 +202,7 @@ class CoordinateurController extends Controller
             return $seance->classe ? $seance->classe->nom : 'Non assigné';
         });
 
-        $allClasses = $groupedSeances->keys()->toArray();
-
-        return view('coordinateur.emploi', compact('groupedSeances', 'allClasses', 'selectedClasse', 'jourDebut', 'jourFin', 'seances'));
+        return view('coordinateur.emploi', compact('groupedSeances', 'selectedClasse', 'jourDebut', 'jourFin', 'seances'));
     }
 
     /**
@@ -177,11 +212,14 @@ class CoordinateurController extends Controller
     {
         $seance = Seance::with(['classe', 'professeur.user'])->findOrFail($seance_id);
         $etudiants = Etudiant::where('classe_id', $seance->classe_id)->get();
-        $presences = Presence::where('seance_id', $seance_id)->get()->keyBy('etudiant_id');
+        $presences = Presence::where('seance_id', $seance_id)->get()->keyBy('eleve_id');
 
         return view('coordinateur.presence', compact('seance', 'etudiants', 'presences'));
     }
 
+    /**
+     * Enregistrement des présences pour une séance
+     */
     public function storePresence(Request $request, $seance_id)
     {
         $seance = Seance::findOrFail($seance_id);
@@ -190,8 +228,8 @@ class CoordinateurController extends Controller
         foreach ($etudiants as $etudiant) {
             $statut = $request->input('presence.' . $etudiant->id);
             Presence::updateOrCreate(
-                ['seance_id' => $seance_id, 'etudiant_id' => $etudiant->id],
-                ['statut' => $statut]
+                ['seance_id' => $seance_id, 'eleve_id' => $etudiant->id],
+                ['statut' => $statut, 'justifie' => false]
             );
         }
 
@@ -207,12 +245,16 @@ class CoordinateurController extends Controller
         $demandes_approuvees = Presence::where('justifie', true)->count();
         $total_demandes = Presence::count();
 
-        $demandes = Presence::with(['etudiant', 'etudiant.classe'])
+        $totalSeances = Seance::count();
+        $totalPresences = StatutPresence::where('statut', 'Présent')->count();
+        $taux_presence_moyen = ($totalSeances > 0) ? round(($totalPresences / $totalSeances) * 100, 2) : 0;
+
+        $demandes = Presence::with(['etudiant', 'etudiant.classe', 'etudiant.user'])
             ->where('justifie', false)
-            ->orderBy('created_at', 'desc')
+            ->orderBy('created_at', 'asc')
             ->get();
 
-        return view('coordinateur.absences', compact('demandes_en_attente', 'demandes_approuvees', 'total_demandes', 'demandes'));
+        return view('coordinateur.absences', compact('demandes_en_attente', 'demandes_approuvees', 'total_demandes', 'demandes', 'taux_presence_moyen'));
     }
 
     /**
@@ -220,17 +262,30 @@ class CoordinateurController extends Controller
      */
     public function justifierAbsence(Request $request, $presence_id)
     {
-        $presence = Presence::findOrFail($presence_id);
+        $presence = Presence::findOrFail($presence_id); // Récupérer la présence par ID
 
-        $request->validate([
-            'motif' => 'required|string|max:255',
-        ]);
+        // Créer un nouveau statut de justification
+        $statutJustification = new StatutJustification();
+        $statutJustification->presence_id = $presence->id;
 
-        $presence->justifie = true;
-        $presence->motif = $request->motif;
+        $message = '';
+        if ($request->has('accepter')) {
+            $statutJustification->statut = 'Acceptée';
+            $presence->justifie = true;
+            $message = 'Absence justifiée.';
+        } elseif ($request->has('rejeter')) {
+            $statutJustification->statut = 'Rejetée';
+            $presence->justifie = false;
+            $message = 'Absence rejetée.';
+        } else {
+            return back()->withErrors('Vous devez sélectionner une action (Accepter ou Rejeter).');
+        }
+
+        $statutJustification->save();
         $presence->save();
 
-        return back()->with('success', 'Absence justifiée.');
+        // Rediriger vers la vue des absences avec un message de succès
+        return redirect()->route('absences')->with('success', $message);
     }
 
     /**
@@ -239,7 +294,17 @@ class CoordinateurController extends Controller
     public function statsClasse($classe_id)
     {
         $classe = Classe::findOrFail($classe_id);
-        // Calculs à faire ici pour le taux de présence et autres stats
-        return view('coordinateur.stats', compact('classe'));
+
+        // Calcul du taux de présence moyen pour la classe
+        $totalSeances = Seance::where('classe_id', $classe_id)->count();
+        $totalPresences = Presence::whereHas('seance', function ($query) use ($classe_id) {
+            $query->where('classe_id', $classe_id);
+        })->where('statut', 'Présent')->count();
+
+        $tauxPresenceMoyen = ($totalSeances > 0) ? round(($totalPresences / $totalSeances) * 100, 2) : 0;
+
+        // Autres calculs à faire ici pour les autres stats
+
+        return view('coordinateur.stats', compact('classe', 'tauxPresenceMoyen'));
     }
 }

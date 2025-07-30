@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Classe;
 use App\Models\Filiere;
+use App\Models\Etudiant;
 use Illuminate\Support\Facades\Hash;
 
 class AdminController extends Controller
@@ -97,13 +98,47 @@ class AdminController extends Controller
         return view('admin.edit-user', compact('user', 'roles', 'classes'));
     }
 
-    // Affichage de la liste des classes et des filières
-    public function showClassesAndFilieres()
-    {
-        $classes = Classe::with(['filiere', 'etudiants'])->get();
-        $filieres = Filiere::all();
-        return view('admin.classes-filieres', compact('classes', 'filieres'));
+    public function updateUser(Request $request, $id)
+{
+    $request->validate([
+        'nom' => 'required|string|max:255',
+        'prenom' => 'required|string|max:255',
+        'email' => 'required|string|email|max:255|unique:users,email,' . $id,
+        'password' => 'nullable|string|min:6|confirmed',
+        'categorie' => 'required|in:administrateur,professeur,coordinateur,etudiant,parent',
+        'classe_id' => 'nullable|exists:classes,id',
+    ]);
+
+    $user = User::findOrFail($id);
+    $user->nom = $request->nom;
+    $user->prenom = $request->prenom;
+    $user->email = $request->email;
+
+    if ($request->filled('password')) {
+        $user->password = Hash::make($request->password);
     }
+
+    $user->categorie = $request->categorie;
+    $user->classe_id = $request->classe_id;
+    $user->save();
+
+    return redirect()->route('admin.users')->with('success', 'Utilisateur mis à jour avec succès !');
+}
+
+
+    // Affichage de la liste des classes et des filières
+public function showClassesAndFilieres()
+{
+    $classes = Classe::with('filiere')->get();
+    $filieres = Filiere::all();
+
+    foreach ($classes as $classe) {
+        $classe->load('etudiants.user');
+    }
+
+    return view('admin.classes-filieres', compact('classes', 'filieres'));
+}
+
 
     // Création d'une nouvelle classe
     public function createClasse(Request $request)
