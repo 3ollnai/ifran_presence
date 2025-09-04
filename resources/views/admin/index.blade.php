@@ -5,35 +5,35 @@
 @section('content')
     <div class="px-2 sm:px-4 md:px-8 py-4 max-w-7xl mx-auto w-full">
         <h1 class="text-2xl font-bold mb-2">Tableau de Bord Administrateur</h1>
-        <h2 class="text-lg font-semibold text-gray-500 mb-6">Statistiques Clés</h2>
+        <h2 class="text-lg font-semibold text-white mb-6">Statistiques Clés</h2>
         {{-- Statistiques --}}
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <div class="bg-white rounded-xl p-5 shadow flex flex-col">
                 <span class="text-gray-500 font-medium">Total Étudiants</span>
-                <span class="text-3xl font-bold text-violet-700 mt-2">520</span>
+                <span class="text-3xl font-bold text-violet-700 mt-2">550</span>
                 <span class="text-xs text-green-600 mt-1 flex items-center gap-1">
-                    +12 depuis le mois dernier
+                    +30 depuis juillet
                 </span>
             </div>
             <div class="bg-white rounded-xl p-5 shadow flex flex-col">
                 <span class="text-gray-500 font-medium">Présents Aujourd'hui</span>
-                <span class="text-3xl font-bold text-violet-700 mt-2">485</span>
+                <span class="text-3xl font-bold text-violet-700 mt-2">495</span>
                 <span class="text-xs text-green-600 mt-1 flex items-center gap-1">
-                    +2% par rapport à hier
+                    +10 par rapport à juillet
                 </span>
             </div>
             <div class="bg-white rounded-xl p-5 shadow flex flex-col">
                 <span class="text-gray-500 font-medium">Absents Aujourd'hui</span>
-                <span class="text-3xl font-bold text-violet-700 mt-2">35</span>
+                <span class="text-3xl font-bold text-violet-700 mt-2">55</span>
                 <span class="text-xs text-red-500 mt-1 flex items-center gap-1">
-                    -1% par rapport à hier
+                    -5 par rapport à juillet
                 </span>
             </div>
             <div class="bg-white rounded-xl p-5 shadow flex flex-col">
                 <span class="text-gray-500 font-medium">Absences justifiées</span>
-                <span class="text-3xl font-bold text-violet-700 mt-2">20</span>
+                <span class="text-3xl font-bold text-violet-700 mt-2">30</span>
                 <span class="text-xs text-green-600 mt-1 flex items-center gap-1">
-                    +3 depuis la semaine dernière
+                    +10 depuis juillet
                 </span>
             </div>
         </div>
@@ -42,7 +42,7 @@
             <div class="bg-white rounded-xl p-5 shadow min-h-[260px] flex flex-col">
                 <div class="flex justify-between items-center mb-2">
                     <span class="font-semibold">Taux de Présence Mensuel</span>
-                    <span class="text-xs text-gray-400"></span>
+                    <span class="text-xs text-gray-400">Juillet - Août - Septembre</span>
                 </div>
                 <div class="flex-1 flex items-center">
                     <canvas id="attendanceChart" height="120"></canvas>
@@ -51,7 +51,7 @@
             <div class="bg-white rounded-xl p-5 shadow min-h-[260px] flex flex-col">
                 <div class="flex justify-between items-center mb-2">
                     <span class="font-semibold">Répartition des Absences</span>
-                    <span class="text-xs text-gray-400"></span>
+                    <span class="text-xs text-gray-400">Juillet - Août - Septembre</span>
                 </div>
                 <div class="flex-1 flex items-center">
                     <canvas id="absencePieChart" height="120"></canvas>
@@ -119,56 +119,86 @@
         </div>
     </div>
 @endsection
-
-{{-- @section('scripts')
+@section('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    // Graphique ligne : Taux de présence mensuel
-    const ctx = document.getElementById('attendanceChart').getContext('2d');
-    new Chart(ctx, {
+    // Données de présence mensuelle
+    const attendanceData = {
+        labels: ['Juillet', 'Août', 'Septembre'],
+        datasets: [{
+            label: 'Taux de Présence',
+            data: [90, 92, 95],
+            backgroundColor: '#7c3aed',
+            borderColor: '#7c3aed',
+            borderWidth: 1
+        }]
+    };
+
+    const attendanceConfig = {
         type: 'line',
-        data: {
-            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-            datasets: [{
-                label: 'Taux de présence (%)',
-                data: [95, 92, 96, 93, 97, 99, 98, 96, 97, 95, 98, 99],
-                borderColor: '#7c3aed',
-                backgroundColor: 'rgba(124,58,237,0.1)',
-                tension: 0.4,
-                fill: true,
-                pointRadius: 3,
-                pointBackgroundColor: '#7c3aed'
-            }]
-        },
+        data: attendanceData,
         options: {
-            plugins: { legend: { display: false } },
+            responsive: true,
+            maintainAspectRatio: false,
             scales: {
-                y: { beginAtZero: true, max: 100 }
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: {
+                        callback: function(value, index, ticks) {
+                            return value + '%';
+                        }
+                    }
+                }
+            },
+            plugins: {
+                title: {
+                    display: false
+                },
+                legend: {
+                    display: false
+                }
             }
         }
-    });
+    };
 
-    // Graphique donut : Répartition des absences
-    const pieCtx = document.getElementById('absencePieChart').getContext('2d');
-    new Chart(pieCtx, {
+    const attendanceChart = new Chart(document.getElementById('attendanceChart'), attendanceConfig);
+
+    // Données de répartition des absences
+    const absenceData = {
+        labels: ['Médical', 'Familial', 'Retard', 'Non justifié', 'Autre'],
+        datasets: [{
+            label: 'Répartition des Absences',
+            data: [20, 15, 10, 40, 15],
+            backgroundColor: ['#9f7aea', '#60a5fa', '#fb923c', '#f87171', '#9ca3af'],
+            borderWidth: 0
+        }]
+    };
+
+    const absenceConfig = {
         type: 'doughnut',
-        data: {
-            labels: ['Médical', 'Familial', 'Retard', 'Non justifié', 'Autre'],
-            datasets: [{
-                data: [12, 8, 5, 7, 3],
-                backgroundColor: [
-                    '#a78bfa', // violet
-                    '#60a5fa', // bleu
-                    '#fdba74', // orange
-                    '#f87171', // rouge
-                    '#a3a3a3'  // gris
-                ],
-                borderWidth: 2
-            }]
-        },
+        data: absenceData,
         options: {
-            cutout: '70%',
-            plugins: { legend: { display: false } }
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: false
+                },
+                legend: {
+                    position: 'right',
+                    labels: {
+                        boxWidth: 12,
+                        boxHeight: 12,
+                        font: {
+                            size: 12
+                        }
+                    }
+                }
+            }
         }
-    });
-</script> --}}
-{{-- @endsection --}}
+    };
+
+    const absencePieChart = new Chart(document.getElementById('absencePieChart'), absenceConfig);
+</script>
+@endsection

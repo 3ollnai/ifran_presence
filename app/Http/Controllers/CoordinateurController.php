@@ -249,23 +249,23 @@ class CoordinateurController extends Controller
     /**
      * Affichage des absences à justifier
      */
-    public function absences()
-    {
-        $demandes_en_attente = Presence::where('justifie', false)->count();
-        $demandes_approuvees = Presence::where('justifie', true)->count();
-        $total_demandes = Presence::count();
+public function absences()
+{
+    $demandes_en_attente = Presence::where('justifie', false)->count();
+    $demandes_approuvees = Presence::where('justifie', true)->count();
+    $total_demandes = Presence::count();
 
-        $totalSeances = Seance::count();
-        $totalPresences = StatutPresence::where('statut', 'Présent')->count();
-        $taux_presence_moyen = ($totalSeances > 0) ? round(($totalPresences / $totalSeances) * 100, 2) : 0;
+    $totalSeances = Seance::count();
+    $totalPresences = StatutPresence::where('statut', 'Présent')->count();
+    $taux_presence_moyen = ($totalSeances > 0) ? round(($totalPresences / $totalSeances) * 100, 2) : 0;
 
-        $demandes = Presence::with(['etudiant', 'etudiant.classe', 'etudiant.user'])
-            ->where('justifie', false)
-            ->orderBy('created_at', 'asc')
-            ->get();
+    $demandes = Presence::with(['etudiant', 'etudiant.classe', 'etudiant.user'])
+        ->where('justifie', false)
+        ->orderBy('created_at', 'asc')
+        ->paginate(10);
 
-        return view('coordinateur.absences', compact('demandes_en_attente', 'demandes_approuvees', 'total_demandes', 'demandes', 'taux_presence_moyen'));
-    }
+    return view('coordinateur.absences', compact('demandes_en_attente', 'demandes_approuvees', 'total_demandes', 'demandes', 'taux_presence_moyen'));
+}
 
     /**
      * Justification d'une absence
@@ -275,7 +275,7 @@ class CoordinateurController extends Controller
  */
 public function justifierAbsence(Request $request, $presence_id)
 {
-    $presence = Presence::findOrFail($presence_id); // Récupérer la présence par ID
+    $presence = Presence::findOrFail($presence_id);
 
     // Créer un nouveau statut de justification
     $statutJustification = new StatutJustification();
@@ -298,7 +298,7 @@ public function justifierAbsence(Request $request, $presence_id)
     $presence->save();
 
     // Rediriger vers la vue des absences avec un message de succès
-    return redirect()->route('absences')->with('success', $message);
+    return redirect()->route('coordinateur.absences')->with('success', $message);
 }
 
 

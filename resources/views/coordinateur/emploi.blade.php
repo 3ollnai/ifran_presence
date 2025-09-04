@@ -26,10 +26,10 @@
         @endif
 
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-2">
-            <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-800">Emploi du temps</h1>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-white">Emploi du temps</h1>
             <div class="flex items-center space-x-4">
                 <div class="flex items-center">
-                    <label for="module-select" class="mr-2 text-gray-600 font-medium">Module :</label>
+                    <label for="module-select" class="mr-2 text-white font-medium">Module :</label>
                     <select id="module-select"
                         class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500">
                         <option value="">Tous les modules</option>
@@ -44,7 +44,7 @@
                 </div>
 
                 <div class="flex items-center">
-                    <label for="classe-select" class="mr-2 text-gray-600 font-medium">Classe :</label>
+                    <label for="classe-select" class="mr-2 text-white font-medium">Classe :</label>
                     <select id="classe-select"
                         class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500">
                         <option value="">Toutes les classes</option>
@@ -54,13 +54,13 @@
                     </select>
                 </div>
                 <div class="flex items-center">
-                    <label for="jour_debut" class="mr-2 text-gray-600 font-medium">Date début :</label>
+                    <label for="jour_debut" class="mr-2 text-white font-medium">Date début :</label>
                     <input type="text"
                         class="form-control flatpickr-input px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
                         id="jour_debut" name="jour_debut" value="{{ $jourDebut }}" data-input>
                 </div>
                 <div class="flex items-center">
-                    <label for="jour_fin" class="mr-2 text-gray-600 font-medium">Date fin :</label>
+                    <label for="jour_fin" class="mr-2 text-white font-medium">Date fin :</label>
                     <input type="text"
                         class="form-control flatpickr-input px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
                         id="jour_fin" name="jour_fin" value="{{ $jourFin }}" data-input>

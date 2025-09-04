@@ -8,7 +8,7 @@
     <title>@yield('title', 'Gestion de Présences')</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
-     
+
     <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.css" rel="stylesheet" />
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js"></script>
@@ -17,10 +17,9 @@
     @yield('head')
 </head>
 
-<body class="bg-gray-50 min-h-screen text-gray-900">
+<body class="bg-[#215991] min-h-screen text-gray-900">
     <div class="flex min-h-screen">
-        {{-- Sidebar --}}
-        <aside class="w-64 bg-white border-r flex flex-col justify-between">
+        <aside class="w-64 bg-[#E5F3FF] border-r flex flex-col justify-between">
             <div>
                 <div class="p-6 flex items-center gap-2">
                     <svg class="w-7 h-7 text-violet-600" fill="none" stroke="currentColor" stroke-width="2"

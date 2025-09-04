@@ -6,21 +6,16 @@
 
         <div class="grid grid-cols-3 gap-4 mb-6">
             <div class="bg-white rounded-lg shadow p-4">
-                <h2 class="text-lg font-bold mb-2">Tableau de Bord</h2>
-                <div class="space-y-2">
-                    <div>
-                        <span class="font-semibold">Demandes en attente:</span>
-                        <span class="text-gray-600">{{ $demandes_en_attente }}</span>
-                    </div>
-                    <div>
-                        <span class="font-semibold">Demandes approuvées:</span>
-                        <span class="text-gray-600">{{ $demandes_approuvees }}</span>
-                    </div>
-                    <div>
-                        <span class="font-semibold">Total des demandes:</span>
-                        <span class="text-gray-600">{{ $total_demandes }}</span>
-                    </div>
-                </div>
+                <h2 class="text-lg font-bold mb-2">Demandes en attente</h2>
+                <div class="text-4xl font-bold text-gray-600">{{ $demandes_en_attente }}</div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4">
+                <h2 class="text-lg font-bold mb-2">Demandes approuvées</h2>
+                <div class="text-4xl font-bold text-gray-600">{{ $demandes_approuvees }}</div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4">
+                <h2 class="text-lg font-bold mb-2">Total des demandes</h2>
+                <div class="text-4xl font-bold text-gray-600">{{ $total_demandes }}</div>
             </div>
         </div>
 
@@ -33,7 +28,7 @@
 
         <div class="bg-white rounded-lg shadow p-4">
             <h2 class="text-lg font-bold mb-4">Demandes d'Absence</h2>
-            <div class="overflow-hidden">
+            <div class="overflow-x-auto">
                 <table class="w-full table-auto">
                     <thead>
                         <tr class="bg-gray-100">
@@ -74,7 +69,7 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     @if (!$demande->justifie)
-                                        <form method="POST" action="">
+                                        <form method="POST" action="{{ route('coordinateur.absencejustifier', $demande->id) }}">
                                             @csrf
                                             <button type="submit" name="accepter"
                                                 class="text-green-600 hover:text-green-900 mr-2">Accepter</button>
@@ -83,11 +78,13 @@
                                         </form>
                                     @endif
                                 </td>
+
                             </tr>
                         @endforeach
                     </tbody>
                 </table>
             </div>
+            {{ $demandes->links() }}
         </div>
     </div>
 @endsection

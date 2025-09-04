@@ -140,11 +140,18 @@ public function showClassesAndFilieres()
     $classes = Classe::with('filiere')->get();
     $filieres = Filiere::all();
 
+    // Calculer les statistiques
+    $totalClasses = $classes->count();
+    $classesActives = $classes->where('statut', 'actif')->count(); // Remplacez 'statut' par le champ approprié
+    $etudiantsInscrits = Etudiant::count(); // Compte total des étudiants
+    $coursArchives = 0; // Remplacez cela par votre logique pour compter les cours archivés
+    $niveaux = ['Niveau 1', 'Niveau 2', 'Niveau 3']; // Exemple de niveaux, remplacez par vos données
+
     foreach ($classes as $classe) {
         $classe->load('etudiants.user');
     }
 
-    return view('admin.classes-filieres', compact('classes', 'filieres'));
+    return view('admin.classes-filieres', compact('classes', 'filieres', 'totalClasses', 'classesActives', 'etudiantsInscrits', 'coursArchives', 'niveaux'));
 }
 
 
@@ -188,4 +195,8 @@ public function showClassesAndFilieres()
 
         return redirect()->route('admin.users')->with('success', 'Utilisateur supprimé avec succès !');
     }
+
+
+
 }
+
