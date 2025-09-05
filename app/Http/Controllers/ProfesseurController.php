@@ -20,7 +20,7 @@ class ProfesseurController extends Controller
         $this->middleware(['auth', 'role:professeur']);
     }
 
-   public function index()
+    public function index()
 {
     $professeur = Professeur::where('user_id', Auth::id())->first();
 
@@ -84,6 +84,16 @@ class ProfesseurController extends Controller
     ]);
 }
 
+public function showSeance($id)
+{
+    $seance = Seance::findOrFail($id);
+    $etudiants = $seance->classe->etudiants;
+
+    return view('professeur.showSeance', [
+        'seance' => $seance,
+        'etudiants' => $etudiants,
+    ]);
+}
 
     public function markPresence(Request $request, $id)
     {
@@ -112,82 +122,98 @@ class ProfesseurController extends Controller
         return redirect()->route('professeur.index')->with('success', 'Présences enregistrées avec succès.');
     }
 
-public function showSeance($id)
+public function historique()
 {
-    $seance = Seance::with([
-        'classe.etudiants.user',
-        'module',
-        'presences.statut' // Chargement de la relation 'statut' pour chaque présence
-    ])->findOrFail($id);
-
-    // Vérifier si la séance est associée à un professeur
     $professeur = Professeur::where('user_id', Auth::id())->first();
-    if ($seance->professeur_id !== $professeur->id) {
-        return redirect()->route('professeur.index')->with('error', 'Accès non autorisé à cette séance.');
-    }
-
-    return view('professeur.showSeance', compact('seance'));
-}
-
-
-
-
-    public function historique()
-    {
-        $professeur = Professeur::where('user_id', Auth::id())->first();
-        $seances = Seance::where('professeur_id', $professeur->id)
-            ->with(['classe', 'module', 'presences', 'presences.etudiant.user'])
-            ->orderBy('date', 'desc')
-            ->get();
-
-        $seanceEtudiantCount = [];
-        foreach ($seances as $seance) {
-            $seanceEtudiantCount[$seance->id] = $seance->classe ? $seance->classe->etudiants()->count() : 0;
-        }
-
-        $absencesNonJustifiees = Presence::whereHas('statut', function ($query) {
-            $query->where('statut', 'Absent');
-        })
-        ->whereHas('seance', function ($query) use ($professeur) {
-            $query->where('professeur_id', $professeur->id);
-        })
-        ->with(['seance', 'etudiant.user'])
-        ->orderBy('created_at', 'desc')
-        ->get(); // Supprimer limit(1) pour obtenir toutes les absences non justifiées
-
-        $totalClassesEnseignees = $seances->count();
-        $classesCurrentMois = Seance::where('professeur_id', $professeur->id)
-            ->whereMonth('date', Carbon::now()->month)
-            ->count();
-
-        $totalPresences = Presence::whereHas('seance', function ($query) use ($professeur) {
-            $query->where('professeur_id', $professeur->id);
-        })->count();
-
-        $etudiantsTotal = Etudiant::count();
-        $tauxPresenceMoyen = $etudiantsTotal > 0 ? ($totalPresences / ($etudiantsTotal * $totalClassesEnseignees)) * 100 : 0;
-
-        // Récupérer les absences récentes
-        $absencesRecentes = Presence::whereHas('statut', function ($query) {
-            $query->where('statut', 'Absent');
-        })
-        ->whereHas('seance', function ($query) use ($professeur) {
-            $query->where('professeur_id', $professeur->id);
-        })
-        ->with(['seance', 'etudiant.user'])
-        ->orderBy('created_at', 'desc')
-        ->take(5) // Les 5 dernières absences
+    $seances = Seance::where('professeur_id', $professeur->id)
+        ->with(['classe', 'module', 'presences', 'presences.etudiant.user', 'presences.justificationAbsence'])
+        ->orderBy('date', 'desc')
         ->get();
 
-        return view('professeur.historique-presence', [
-            'absencesNonJustifiees' => $absencesNonJustifiees,
-            'totalClassesEnseignees' => $totalClassesEnseignees,
-            'seanceEtudiantCount' => $seanceEtudiantCount,
-            'seances' => $seances,
-            'classesCurrentMois' => $classesCurrentMois,
-            'tauxPresenceMoyen' => $tauxPresenceMoyen,
-            'etudiantsTotal' => $etudiantsTotal,
-            'absencesRecentes' => $absencesRecentes,
-        ]);
+    $seanceEtudiantCount = [];
+    foreach ($seances as $seance) {
+        $seanceEtudiantCount[$seance->id] = $seance->classe ? $seance->classe->etudiants()->count() : 0;
     }
+
+    // Récupérer les absences (justifiées et non justifiées)
+    $absences = Presence::whereHas('seance', function ($query) use ($professeur) {
+        $query->where('professeur_id', $professeur->id);
+    })
+    ->with(['seance', 'etudiant.user', 'justificationAbsence'])
+    ->orderBy('created_at', 'desc')
+    ->get();
+
+    // Séparer les absences justifiées et non justifiées
+    $absencesJustifiees = $absences->filter(function ($presence) {
+        return $presence->justifie; // Assurez-vous que le champ 'justifie' est bien utilisé
+    });
+
+    $absencesNonJustifiees = $absences->filter(function ($presence) {
+        return !$presence->justifie;
+    });
+
+    // Récupérer les absences récentes pour le mois actuel
+    $absencesRecentes = Presence::whereHas('statut', function ($query) {
+        $query->where('statut', 'Absent');
+    })
+    ->whereHas('seance', function ($query) use ($professeur) {
+        $query->where('professeur_id', $professeur->id);
+    })
+    ->with(['seance', 'etudiant.user'])
+    ->whereMonth('created_at', Carbon::now()->month)
+    ->whereYear('created_at', Carbon::now()->year)
+    ->orderBy('created_at', 'desc')
+    ->take(5)
+    ->get();
+
+    $totalClassesEnseignees = $seances->count();
+    $classesCurrentMois = Seance::where('professeur_id', $professeur->id)
+        ->whereMonth('date', Carbon::now()->month)
+        ->count();
+
+    // Calculer le taux de présence pour le mois actuel
+    $totalPresencesMois = Presence::whereHas('seance', function ($query) use ($professeur) {
+        $query->where('professeur_id', $professeur->id);
+    })
+    ->whereMonth('created_at', Carbon::now()->month)
+    ->whereYear('created_at', Carbon::now()->year)
+    ->count();
+
+    $etudiantsTotal = Etudiant::count();
+    $tauxPresenceMoyen = $etudiantsTotal > 0 ? ($totalPresencesMois / ($etudiantsTotal * $classesCurrentMois)) * 100 : 0;
+
+    // Récupérer les données pour le graphique
+    $presenceStats = [];
+    foreach ($seances as $seance) {
+        // Convertir la date en objet Carbon
+        $seanceDate = Carbon::parse($seance->date);
+
+        if ($seanceDate->month == Carbon::now()->month && $seanceDate->year == Carbon::now()->year) {
+            $totalEtudiants = $seance->classe ? $seance->classe->etudiants()->count() : 0;
+            $totalPresences = $seance->presences()->count();
+            $tauxPresence = $totalEtudiants > 0 ? ($totalPresences / $totalEtudiants) * 100 : 0;
+
+            $presenceStats[$seanceDate->format('d/m/Y')] = $tauxPresence;
+        }
+    }
+
+    // Convertir les données en format pour le graphique
+    $labels = array_keys($presenceStats);
+    $data = array_values($presenceStats);
+
+    return view('professeur.historique-presence', [
+        'absencesNonJustifiees' => $absencesNonJustifiees,
+        'absencesJustifiees' => $absencesJustifiees, // Ajout des absences justifiées
+        'totalClassesEnseignees' => $totalClassesEnseignees,
+        'seanceEtudiantCount' => $seanceEtudiantCount,
+        'seances' => $seances,
+        'classesCurrentMois' => $classesCurrentMois,
+        'tauxPresenceMoyen' => $tauxPresenceMoyen,
+        'etudiantsTotal' => $etudiantsTotal,
+        'absencesRecentes' => $absencesRecentes, // Assurez-vous que cette variable est définie
+        'presenceLabels' => json_encode($labels),
+        'presenceData' => json_encode($data),
+    ]);
+}
+
 }
