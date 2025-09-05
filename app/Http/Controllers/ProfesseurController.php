@@ -20,37 +20,70 @@ class ProfesseurController extends Controller
         $this->middleware(['auth', 'role:professeur']);
     }
 
-    public function index()
-    {
-        $professeur = Professeur::where('user_id', Auth::id())->first();
+   public function index()
+{
+    $professeur = Professeur::where('user_id', Auth::id())->first();
 
-        // Compter les étudiants et les séances
-        $etudiants_count = Etudiant::count();
-        $seances_count = Seance::where('professeur_id', $professeur->id)->count();
+    // Compter les étudiants et les séances
+    $etudiants_count = Etudiant::count();
+    $seances_count = Seance::where('professeur_id', $professeur->id)->count();
 
-        // Récupérer les séances avec les relations
-        $seances = Seance::with(['classe', 'module'])
-            ->where('professeur_id', $professeur->id)
-            ->get();
+    // Récupérer les séances avec les relations
+    $seances = Seance::with(['classe', 'module'])
+        ->where('professeur_id', $professeur->id)
+        ->get();
 
-        // Compter le nombre d'étudiants par séance
-        $seancesWithStudentCount = $seances->map(function ($seance) {
-            $studentCount = $seance->classe ? $seance->classe->etudiants()->count() : 0;
-            return [
-                'id' => $seance->id,
-                'date' => Carbon::parse($seance->date)->format('Y-m-d'),
-                'module' => $seance->module->nom,
-                'classe' => $seance->classe ? $seance->classe->nom : 'Non assignée',
-                'student_count' => $studentCount,
-            ];
-        });
+    // Compter le nombre d'étudiants par séance
+    $seancesWithStudentCount = $seances->map(function ($seance) {
+        $studentCount = $seance->classe ? $seance->classe->etudiants()->count() : 0;
+        return [
+            'id' => $seance->id,
+            'date' => Carbon::parse($seance->date)->format('Y-m-d'),
+            'module' => $seance->module->nom,
+            'classe' => $seance->classe ? $seance->classe->nom : 'Non assignée',
+            'student_count' => $studentCount,
+        ];
+    });
 
-        return view('professeur.index', [
-            'etudiants_count' => $etudiants_count,
-            'seances_count' => $seances_count,
-            'seancesWithStudentCount' => $seancesWithStudentCount,
-        ]);
-    }
+    // Récupérer les absences justifiées
+    $absencesjustifiees = Presence::whereHas('statut', function ($query) {
+        $query->where('statut', 'Justifié');
+    })
+    ->whereHas('seance', function ($query) use ($professeur) {
+        $query->where('professeur_id', $professeur->id);
+    })
+    ->get();
+
+    // Récupérer les absences récentes
+    $absencesRecentes = Presence::whereHas('statut', function ($query) {
+        $query->where('statut', 'Absent');
+    })
+    ->whereHas('seance', function ($query) use ($professeur) {
+        $query->where('professeur_id', $professeur->id);
+    })
+    ->with(['seance', 'etudiant.user'])
+    ->orderBy('created_at', 'desc')
+    ->take(5)
+    ->get();
+
+    // Calculer le taux de présence moyen
+    $etudiantsTotal = Etudiant::count();
+    $totalPresences = Presence::whereHas('seance', function ($query) use ($professeur) {
+        $query->where('professeur_id', $professeur->id);
+    })->count();
+    $totalClassesEnseignees = $seances->count();
+    $tauxPresenceMoyen = $etudiantsTotal > 0 ? ($totalPresences / ($etudiantsTotal * $totalClassesEnseignees)) * 100 : 0;
+
+    return view('professeur.index', [
+        'etudiants_count' => $etudiants_count,
+        'seances_count' => $seances_count,
+        'seancesWithStudentCount' => $seancesWithStudentCount,
+        'absencesjustifiees' => $absencesjustifiees,
+        'absencesRecentes' => $absencesRecentes,
+        'tauxPresenceMoyen' => $tauxPresenceMoyen,
+    ]);
+}
+
 
     public function markPresence(Request $request, $id)
     {
