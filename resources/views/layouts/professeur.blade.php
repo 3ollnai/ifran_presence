@@ -16,9 +16,9 @@
 <body class="bg-[#215991] min-h-screen text-gray-900">
     <div class="flex min-h-screen">
         {{-- Sidebar --}}
-        <aside class="w-64 bg-[#E5F3FF] border-r flex flex-col justify-between">
+        <aside class="w-64 bg-white border-r flex flex-col justify-between shadow-lg">
             <div>
-                <div class="p-6 flex items-center gap-2">
+                <div class="p-6 flex items-center gap-2 border-b">
                     <svg class="w-7 h-7 text-violet-600" fill="none" stroke="currentColor" stroke-width="2"
                         viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l4 2"></path>
@@ -31,7 +31,7 @@
                     <ul>
                         <li>
                             <a href="{{ route('professeur.index') }}"
-                                class="flex items-center px-6 py-3 font-semibold rounded-r-full mb-2
+                                class="flex items-center px-6 py-3 font-semibold rounded-lg mb-2
                                 {{ request()->routeIs('professeur.index') ? 'text-violet-700 bg-violet-100' : 'text-gray-700 hover:bg-violet-50' }}">
                                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" stroke-width="2"
                                     viewBox="0 0 24 24">
@@ -42,12 +42,11 @@
                                 Tableau de Bord
                             </a>
                         </li>
-                        
 
                         <li>
                             <a href="{{ route('historique.presence') }}"
-                                class="flex items-center px-6 py-3 font-semibold rounded-r-full mb-2
-        {{ request()->routeIs('historique.presence') ? 'text-violet-700 bg-violet-100' : 'text-gray-700 hover:bg-violet-50' }}">
+                                class="flex items-center px-6 py-3 font-semibold rounded-lg mb-2
+                                {{ request()->routeIs('historique.presence') ? 'text-violet-700 bg-violet-100' : 'text-gray-700 hover:bg-violet-50' }}">
                                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" stroke-width="2"
                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -86,7 +85,7 @@
         {{-- Main Content --}}
         <main class="flex-1 flex flex-col">
             {{-- Top Navbar --}}
-            <header class="bg-white border-b flex items-center justify-between px-8 py-3">
+            <header class="bg-white border-b shadow-md flex items-center justify-between px-8 py-4">
                 <div class="flex items-center gap-8">
                     {{-- Vous pouvez ajouter d'autres éléments ici si nécessaire --}}
                 </div>
@@ -108,11 +107,11 @@
                 </div>
             </header>
             {{-- Page Content --}}
-            <div class="flex-1 px-8 py-6">
+            <div class="flex-1 px-8 py-6  rounded-lg shadow-inner">
                 @yield('content')
             </div>
-            <footer class="text-xs text-gray-400 text-center py-2">
-                IFRAN<span class="text-violet-600 font-bold">2025</span>
+            <footer class="text-xs text-gray-400 text-center py-3 ">
+                IFRAN<span class="text-white font-bold">2025</span>
             </footer>
         </main>
     </div>
