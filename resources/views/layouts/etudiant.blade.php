@@ -36,7 +36,7 @@
                             </a>
                         </li>
                         <li>
-                            <a href="" class="flex items-center px-6 py-3 font-semibold rounded-lg mb-2 {{ request()->routeIs('emploi.tps') ? 'text-violet-700 bg-violet-100' : 'text-gray-700 hover:bg-violet-50' }}">
+                            <a href="{{ route('etudiant.emploi_du_temps') }}" class="flex items-center px-6 py-3 font-semibold rounded-lg mb-2 {{ request()->routeIs('emploi.tps') ? 'text-violet-700 bg-violet-100' : 'text-gray-700 hover:bg-violet-50' }}">
                                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                                 </svg>
