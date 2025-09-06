@@ -1,18 +1,19 @@
 @extends('layouts.etudiant')
 
 @section('content')
-<h1 class="text-2xl font-bold mb-6">Tableau de Bord Étudiant</h1>
+<h1 class="text-5xl font-extrabold mb-10 text-center text-white">Tableau de Bord Étudiant</h1>
 
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-    <div class="bg-white rounded-lg shadow-md p-6">
-        <h2 class="text-lg font-bold mb-4">Informations Personnelles</h2>
-        <p>Nom : {{ $informationsPersonnelles['nom'] }}</p>
-        <p>Classe : {{ $informationsPersonnelles['classe'] }}</p>
-        <p>Numéro Étudiant : {{ $informationsPersonnelles['numeroEtudiant'] }}</p>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+    <div class="bg-white rounded-lg shadow-lg p-8 transition-transform duration-300 ease-in-out">
+        <h2 class="text-2xl font-semibold mb-6 text-blue-700 border-b pb-3">Informations Personnelles</h2>
+        <p class="text-gray-700 text-lg">Nom : <span class="font-medium">{{ $informationsPersonnelles['nom'] }}</span></p>
+        <p class="text-gray-700 text-lg">Prénom : <span class="font-medium">{{ $informationsPersonnelles['prenom'] }}</span></p>
+        <p class="text-gray-700 text-lg">Classe : <span class="font-medium">{{ $informationsPersonnelles['classe'] }}</span></p>
+        <p class="text-gray-700 text-lg">Numéro Étudiant : <span class="font-medium">{{ $informationsPersonnelles['numeroEtudiant'] }}</span></p>
     </div>
 
-    <div class="bg-white rounded-lg shadow-md p-6">
-        <h2 class="text-lg font-bold mb-4">Taux de Présence</h2>
+    <div class="bg-white rounded-lg shadow-lg p-8 transition-transform duration-300 ease-in-out">
+        <h2 class="text-2xl font-semibold mb-6 text-blue-700 border-b pb-3">Taux de Présence</h2>
         <div class="flex justify-center">
             <canvas id="presenceRateChart" width="200" height="200"></canvas>
         </div>
@@ -33,7 +34,12 @@
                     plugins: {
                         title: {
                             display: true,
-                            text: '{{ round($tauxPresence, 2) }}%'
+                            text: '{{ round($tauxPresence, 2) }}%',
+                            font: {
+                                size: 28,
+                                weight: 'bold'
+                            },
+                            color: '{{ $tauxPresenceColor }}'
                         },
                         legend: {
                             display: false
@@ -42,23 +48,23 @@
                 }
             });
         </script>
-        <p class="{{ $tauxPresenceColor }} mt-4">{{ $tauxPresenceMessage }}</p>
+        <p class="{{ $tauxPresenceColor }} mt-4 font-semibold text-lg">{{ $tauxPresenceMessage }}</p>
     </div>
 
-    <div class="bg-white rounded-lg shadow-md p-6">
-        <h2 class="text-lg font-bold mb-4">Actions Rapides</h2>
-        <ul class="space-y-2">
-            <li><a href="{{ route('etudiant.justifier_absence') }}" class="text-violet-600 hover:text-violet-800 transition">Justifier une absence</a></li>
-            <li><a href="{{ route('etudiant.historique') }}" class="text-violet-600 hover:text-violet-800 transition">Revoir l'historique</a></li>
-        </ul>
+    <div class="bg-white rounded-lg shadow-lg p-8 transition-transform duration-300 ease-in-out">
+        <h2 class="text-2xl font-semibold mb-6 text-blue-700 border-b pb-3">Actions Rapides</h2>
+        <div class="space-y-4">
+            <a href="{{ route('etudiant.justifier_absence') }}" class="block bg-blue-600 text-white text-lg text-center py-3 rounded-lg shadow hover:bg-blue-700 transition duration-200">Justifier une absence</a>
+            <a href="{{ route('etudiant.historique') }}" class="block bg-blue-600 text-white text-lg text-center py-3 rounded-lg shadow hover:bg-blue-700 transition duration-200">Revoir l'historique</a>
+        </div>
     </div>
 </div>
 
-<div class="mt-6 bg-white rounded-lg shadow-md p-6">
-    <h2 class="text-lg font-bold mb-4">Notifications Importantes</h2>
+<div class="mt-8 bg-white rounded-lg shadow-lg p-8">
+    <h2 class="text-2xl font-semibold mb-6 text-blue-700 border-b pb-3">Notifications Importantes</h2>
     <ul class="space-y-2">
         @foreach ($notificationsImportantes as $notification)
-        <li>{{ $notification }}</li>
+        <li class="text-gray-800 text-lg">- {{ $notification }}</li>
         @endforeach
     </ul>
 </div>

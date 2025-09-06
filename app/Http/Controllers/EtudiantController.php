@@ -5,6 +5,7 @@ use Illuminate\Http\Request;
 use App\Models\Seance;
 use App\Models\Presence;
 use App\Models\Etudiant;
+use App\Models\User;
 use App\Models\Module;
 use Illuminate\Support\Facades\Auth;
 
@@ -25,9 +26,10 @@ class EtudiantController extends Controller
         if ($etudiant) {
             // Récupérer les informations personnelles de l'étudiant
             $informationsPersonnelles = [
-                'nom' => $user->name,
-                'classe' => $etudiant->classe->name,
-                'numeroEtudiant' => $etudiant->numero,
+                'nom' => $user->nom ?? 'Nom non disponible',
+                'prenom' => $user->prenom ?? 'Prénom non disponible',
+                'classe' => $etudiant->classe->nom ?? 'Classe non disponible',
+                'numeroEtudiant' => $etudiant->matricule ?? 'Numéro non disponible',
             ];
 
             // Calculer le taux de présence
@@ -42,7 +44,7 @@ class EtudiantController extends Controller
                                     ->whereDate('date', '>=', now()->subMonths(3))
                                     ->count();
 
-            $tauxPresence = $totalSeances > 0 ? ($totalSeances / $totalAbsences) * 100 : 0;
+            $tauxPresence = $totalAbsences > 0 ? ($totalSeances / $totalAbsences) * 100 : 0;
 
             // Définir la couleur et le message en fonction du taux de présence
             if ($tauxPresence >= 90) {
@@ -58,8 +60,8 @@ class EtudiantController extends Controller
 
             // Récupérer les notifications importantes
             $notificationsImportantes = [
-                'Rappel : Examen de Mathématiques le 15 juin à 14h00.',
-                'Information : Sortie scolaire prévue le 20 mai, autorisation à remplir.',
+                'Rappel : Cours de Javascript le 10 septembre à 9h00.',
+                
             ];
 
             return view('etudiant.index', compact('informationsPersonnelles', 'notificationsImportantes', 'tauxPresence', 'tauxPresenceColor', 'tauxPresenceMessage'));
